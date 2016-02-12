@@ -5,13 +5,15 @@ NBHashTable::NBHashTable(int ks) {
 	
 	kSize = ks;
 	bounds = new int[kSize];
-	for(i=0; i < kSize; i++) initProbeBound(i);
+	buckets = new int[kSize];
+	for(i = 0; i < kSize; i++) initProbeBound(i);
 	
 	// TODO: Allocate table for actual data
 }
 
 NBHashTable::~NBHashTable() {
 	delete bounds;
+	delete buckets;
 }
 
 // The threadid is probably not necessary
@@ -26,13 +28,27 @@ void NBHashTable::put(NBType n, int threadID) {
 // int NBHashTable::size();
 // void NBHashTable::remove(int n);
 
+
+// Hash
+
+int NBHashTable::hash(int n) {
+	return (n % kSize);
+}
+
+
 // Bucket
+
+int* NBHashTable::bucket(int h, int index) {
+	return &buckets[(h + (index * (index + 1)) /2) % kSize];
+}
+
 bool NBHashTable::doesBucketContainCollision(int h, int index) {
-	return true; //placeholder
+	return (bucket(h,index) != 0 && hash(*bucket(h,index)) == h);
 }
 
 
 // Bounds
+
 void NBHashTable::initProbeBound(int h) {
 	bounds[h] = 0;
 }

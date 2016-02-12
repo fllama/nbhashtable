@@ -13,13 +13,16 @@ typedef int NBType;
 class NBHashTable {
 	
 	std::mutex printStream;
-	int kSize, *bounds;
+	std::mutex mainMutex;
+	int kSize, *bounds, *buckets;
 	
+	int* bucket(int h, int index);
 	bool doesBucketContainCollision(int h, int index);
 	void initProbeBound(int h);
 	int getProbeBound(int h);
 	void conditionallyRaiseBound(int h, int index);
 	void conditionallyLowerBound(int h, int index);
+	int hash(int n);
 	
 	public:
 		NBHashTable(int ks = 8);
