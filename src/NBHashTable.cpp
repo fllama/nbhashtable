@@ -1,9 +1,5 @@
 #include "NBHashTable.h"
 
-const int kSize = 8;
-
-
-
 NBHashTable::NBHashTable(int ks) {
 	int i;
 	
