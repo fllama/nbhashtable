@@ -12,7 +12,7 @@ void generator(NBHashTable *ht, int tid);
 
 int main(int argc, char **argv) {
 	
-	NBHashTable *ht = new NBHashTable();
+	NBHashTable *ht = new NBHashTable(8);
 	vector<thread> threads;
 	int numThreads, i;
 	

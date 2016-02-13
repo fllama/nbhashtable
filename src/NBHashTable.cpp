@@ -1,5 +1,7 @@
 #include "NBHashTable.h"
 
+#define DEBUG 1
+
 NBHashTable::NBHashTable(int ks) {
 	int i;
 	
@@ -7,6 +9,7 @@ NBHashTable::NBHashTable(int ks) {
 	bounds = new int[kSize];
 	buckets = new int[kSize];
 	for(i = 0; i < kSize; i++) initProbeBound(i);
+	for(i = 0; i < kSize; i++) buckets[i] = EMPTY_FLAG;
 	
 	// TODO: Allocate table for actual data
 }
@@ -39,7 +42,8 @@ int NBHashTable::size() {
 	return kSize;
 }
 
-bool NBHashTable::remove(int n) {
+bool NBHashTable::remove(NBType n) {
+	if (DEBUG) printf("Removing: %d\n", n);
 	//The jump index
 	int probeJumps;
 	
@@ -50,7 +54,10 @@ bool NBHashTable::remove(int n) {
 	for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
 	
 	//Checks if n was found
-	if(probeJumps > bounds[hashValue]) return false;
+	if(probeJumps > bounds[hashValue]){
+		if (DEBUG) printHashTableInfo();
+		return false;
+	}
 	
 	//Sets the slot to empty
 	*getBucketValue(hashValue, probeJumps) = EMPTY_FLAG;
@@ -58,6 +65,8 @@ bool NBHashTable::remove(int n) {
 	//Checks if it was the last bound
 	if(probeJumps == bounds[hashValue])
 		conditionallyLowerBound(hashValue, probeJumps);
+
+	if (DEBUG) printHashTableInfo();
 		
 	return true;
 }
@@ -82,8 +91,8 @@ bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
 
 // Bounds
 
-void NBHashTable::initProbeBound(int startIndex) {
-	bounds[startIndex] = 0;
+void NBHashTable::initProbeBound(int index) {
+	bounds[index] = 0;
 }
 
 int NBHashTable::getProbeBound(int startIndex) {
@@ -108,14 +117,27 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 // Public
 
 bool NBHashTable::insert(NBType n) {
+	if (DEBUG) printf("Inserting: %d\n", n);
 	int hashValue = hash(n);
 	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
 		int *bucketValue = getBucketValue(hashValue, probeJumps);
 		if (*bucketValue == EMPTY_FLAG) {
 			*bucketValue = n;
 			conditionallyRaiseBound(hashValue, probeJumps);
+			printHashTableInfo();
 			return true;
 		}
 	}
 	return false;
+}
+
+void NBHashTable::printHashTableInfo() {
+	for (int i = 0; i < kSize; i++) {
+		printf("%d\t", bounds[i]);
+	}
+	printf("\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%d\t", buckets[i]);
+	}
+	printf("\n\n");
 }
