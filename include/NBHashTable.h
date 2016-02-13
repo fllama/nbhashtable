@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <mutex>
+#define EMPTY_FLAG -1
 
 // This typedef exists solely to assist in future code understanding
 // If we ever wish to add support for multiple types, rather than just ints
@@ -31,10 +32,8 @@ class NBHashTable {
 		bool put(NBType n);
 		bool remove(NBType n);
 		// bool lookup(int);
-		// bool contains(int);
-		// int size();
-
-		bool remove(int);
+		bool contains(int);
+		int size();
 };
 
 #endif

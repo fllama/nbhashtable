@@ -22,31 +22,44 @@ bool NBHashTable::put(NBType n) {
 	return this->insert(n);
 }
 
-// bool NBHashTable::contains(int n);
-// int NBHashTable::size();
+bool NBHashTable::contains(NBType n) {
+	// Get the hash value for n
+	int hashIndex = hash(n), jumps;
+	
+	// check to see if this value is equal
+	for(jumps = 0; jumps <= getProbeBound(hashIndex) && jumps < kSize; jumps++) {
+		if(*getBucketValue(hashIndex, jumps) == n) return true;
+	}
+	
+	// If we're here, either we checked too many times or we exceeded our probe bound range
+	return false;
+}
 
-bool NBHashTable::remove(int n)
-{
-    //The jump index
-    int probeJumps;
-    
-    //Gets the hash
-    int hashValue = hash(n);
-    
-    //Finds the correct bucket
-    for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
-    
-    //Checks if n was found
-    if(probeJumps > bounds[hashValue]) return false;
-    
-    //Sets the slot to empty
-    *getBucketValue(hashValue, probeJumps) = -1;
-    
-    //Checks if it was the last bound
-    if(probeJumps == bounds[hashValue])
-        conditionallyLowerBound(hashValue, probeJumps);
-        
-    return true;
+int NBHashTable::size() {
+	return kSize;
+}
+
+bool NBHashTable::remove(int n) {
+	//The jump index
+	int probeJumps;
+	
+	//Gets the hash
+	int hashValue = hash(n);
+	
+	//Finds the correct bucket
+	for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
+	
+	//Checks if n was found
+	if(probeJumps > bounds[hashValue]) return false;
+	
+	//Sets the slot to empty
+	*getBucketValue(hashValue, probeJumps) = EMPTY_FLAG;
+	
+	//Checks if it was the last bound
+	if(probeJumps == bounds[hashValue])
+		conditionallyLowerBound(hashValue, probeJumps);
+		
+	return true;
 }
 
 // Hash
@@ -98,36 +111,11 @@ bool NBHashTable::insert(NBType n) {
 	int hashValue = hash(n);
 	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
 		int *bucketValue = getBucketValue(hashValue, probeJumps);
-		if (*bucketValue == -1) {
+		if (*bucketValue == EMPTY_FLAG) {
 			*bucketValue = n;
 			conditionallyRaiseBound(hashValue, probeJumps);
 			return true;
 		}
 	}
 	return false;
-
- }
-
- bool NBHashTable::remove(NBType n) {
-    //The jump index
-    int probeJumps;
-    
-    //Gets the hash
-    int hashValue = hash(n);
-    
-    //Finds the correct bucket
-    for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
-    
-    //Checks if n was found
-    if(probeJumps > bounds[hashValue]) return false;
-    
-    //Sets the slot to empty
-    *getBucketValue(hashValue, probeJumps) = -1;
-    
-    //Checks if it was the last bound
-    if(probeJumps == bounds[hashValue])
-        conditionallyLowerBound(hashValue, probeJumps);
-
-    return true;
 }
-
