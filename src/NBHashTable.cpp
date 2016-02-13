@@ -18,9 +18,9 @@ NBHashTable::~NBHashTable() {
 
 // The threadid is probably not necessary
 // But I just wanted to print something out
-void NBHashTable::put(NBType n, int threadID) {
+void NBHashTable::put(NBType n) {
 	printStream.lock();
-	printf("Putting %d, from thread %d!\n", n, threadID);
+	printf("Putting %d!\n", n);
 	printStream.unlock();
 }
 
@@ -37,13 +37,14 @@ int NBHashTable::hash(int n) {
 
 
 // Bucket
-
-int* NBHashTable::bucket(int h, int index) {
-	return &buckets[(h + (index * (index + 1)) /2) % kSize];
+// h is the hash value
+// bucket()
+int NBHashTable::bucket(int h, int index) {
+	return buckets[(h + (index * (index + 1)) /2) % kSize];
 }
 
 bool NBHashTable::doesBucketContainCollision(int h, int index) {
-	return (bucket(h,index) != 0 && hash(*bucket(h,index)) == h);
+	return (bucket(h,index) != 0 && hash(bucket(h,index)) == h);
 }
 
 

@@ -16,7 +16,7 @@ class NBHashTable {
 	std::mutex mainMutex;
 	int kSize, *bounds, *buckets;
 	
-	int* bucket(int h, int index);
+	int bucket(int h, int index);
 	bool doesBucketContainCollision(int h, int index);
 	void initProbeBound(int h);
 	int getProbeBound(int h);
@@ -27,7 +27,8 @@ class NBHashTable {
 	public:
 		NBHashTable(int ks = 8);
 		~NBHashTable();
-		void put(NBType, int);
+		void put(NBType);
+		// bool lookup(int);
 		// bool contains(int);
 		// int size();
 		// void remove();

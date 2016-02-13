@@ -45,7 +45,7 @@ void generator(NBHashTable *ht, int tid) {
 	int num = 1 << tid; // A neat way to represent 2^n :)
 	
 	// lock my hash table access
-	ht->put(num, tid);
+	ht->put(num);
 	// unlock the lock
 	
 }
