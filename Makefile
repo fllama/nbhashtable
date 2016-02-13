@@ -2,7 +2,7 @@ all: default
 
 BUILD_DIR=build
 CFLAGS=-std=c++11 -I include/ -pthread
-MAIN_FILE=main.cpp
+MAIN_FILE=test1.cpp
 
 build/.placeholder:
 	mkdir -vp $(BUILD_DIR)
