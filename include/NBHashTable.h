@@ -17,20 +17,23 @@ class NBHashTable {
 	int kSize, *bounds, *buckets;
 	
 	int* getBucketValue(int startIndex, int probeJumps);
-	bool doesBucketContainCollision(int h, int index);
-	void initProbeBound(int h);
-	int getProbeBound(int h);
-	void conditionallyRaiseBound(int h, int index);
-	void conditionallyLowerBound(int h, int index);
-	int hash(int value);
+	bool doesBucketContainCollision(int startIndex, int probeJumps);
+	void initProbeBound(int startIndex);
+	int getProbeBound(int startIndex);
+	void conditionallyRaiseBound(int startIndex, int probeJumps);
+	void conditionallyLowerBound(int startIndex, int probeJumps);
+	int hash(NBType n);
 	
 	public:
 		NBHashTable(int ks = 8);
 		~NBHashTable();
-		void put(NBType);
+		bool insert(NBType n);
+		bool put(NBType n);
+		bool remove(NBType n);
 		// bool lookup(int);
 		// bool contains(int);
 		// int size();
+
 		bool remove(int);
 };
 

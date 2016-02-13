@@ -18,14 +18,13 @@ NBHashTable::~NBHashTable() {
 
 // The threadid is probably not necessary
 // But I just wanted to print something out
-void NBHashTable::put(NBType n) {
-	printStream.lock();
-	printf("Putting %d!\n", n);
-	printStream.unlock();
+bool NBHashTable::put(NBType n) {
+	return this->insert(n);
 }
 
 // bool NBHashTable::contains(int n);
 // int NBHashTable::size();
+
 bool NBHashTable::remove(int n)
 {
     //The jump index
@@ -46,18 +45,19 @@ bool NBHashTable::remove(int n)
     //Checks if it was the last bound
     if(probeJumps == bounds[hashValue])
         conditionallyLowerBound(hashValue, probeJumps);
+        
+    return true;
 }
 
 // Hash
 
-int NBHashTable::hash(int value) {
-	return (value % kSize);
+int NBHashTable::hash(NBType n) {
+	return (n % kSize);
 }
 
 
 // Bucket
-// h is the hash value
-// bucket()
+
 int* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
 	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
 }
@@ -78,7 +78,7 @@ int NBHashTable::getProbeBound(int startIndex) {
 }
 
 void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
-	bounds[startIndex] = (startIndex > probeJumps) ? startIndex : probeJumps;
+	bounds[startIndex] = (bounds[startIndex] > probeJumps) ? bounds[startIndex] : probeJumps;
 }
 
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
@@ -93,3 +93,41 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 
 
 // Public
+
+bool NBHashTable::insert(NBType n) {
+	int hashValue = hash(n);
+	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
+		int *bucketValue = getBucketValue(hashValue, probeJumps);
+		if (*bucketValue == -1) {
+			*bucketValue = n;
+			conditionallyRaiseBound(hashValue, probeJumps);
+			return true;
+		}
+	}
+	return false;
+
+ }
+
+ bool NBHashTable::remove(NBType n) {
+    //The jump index
+    int probeJumps;
+    
+    //Gets the hash
+    int hashValue = hash(n);
+    
+    //Finds the correct bucket
+    for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
+    
+    //Checks if n was found
+    if(probeJumps > bounds[hashValue]) return false;
+    
+    //Sets the slot to empty
+    *getBucketValue(hashValue, probeJumps) = -1;
+    
+    //Checks if it was the last bound
+    if(probeJumps == bounds[hashValue])
+        conditionallyLowerBound(hashValue, probeJumps);
+
+    return true;
+}
+
