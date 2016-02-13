@@ -106,7 +106,7 @@ void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 	if (probeJumps > 0) {
 		int i = probeJumps - 1;
-		while (i > 0 && -doesBucketContainCollision(startIndex,probeJumps)) {
+		while (i > 0 && !doesBucketContainCollision(startIndex,probeJumps)) {
 			i--;
 		}
 		bounds[startIndex] = i;
