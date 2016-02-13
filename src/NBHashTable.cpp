@@ -26,8 +26,27 @@ void NBHashTable::put(NBType n) {
 
 // bool NBHashTable::contains(int n);
 // int NBHashTable::size();
-// void NBHashTable::remove(int n);
-
+void NBHashTable::remove(int n)
+{
+    //The jump index
+    int probeJumps;
+    
+    //Gets the hash
+    int hashValue = hash(n);
+    
+    //Finds the correct bucket
+    for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
+    
+    //Checks if n was found
+    if(probeJumps > bounds[hashValue]) return false;
+    
+    //Sets the slot to empty
+    *getBucketValue(hashValue, probeJumps) = -1;
+    
+    //Checks if it was the last bound
+    if(probeJumps == bounds[hashValue])
+        conditionallyLowerBound(hashValue, probeJumps);
+}
 
 // Hash
 
