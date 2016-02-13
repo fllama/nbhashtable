@@ -85,7 +85,7 @@ int* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
 }
 
 bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
-	return (getBucketValue(startIndex,probeJumps) != 0 && hash(*getBucketValue(startIndex,probeJumps)) == startIndex);
+	return (getBucketValue(startIndex,probeJumps) != EMPTY_FLAG && hash(*getBucketValue(startIndex,probeJumps)) == startIndex);
 }
 
 
