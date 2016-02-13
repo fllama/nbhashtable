@@ -31,44 +31,44 @@ void NBHashTable::put(NBType n) {
 
 // Hash
 
-int NBHashTable::hash(int n) {
-	return (n % kSize);
+int NBHashTable::hash(int value) {
+	return (value % kSize);
 }
 
 
 // Bucket
 // h is the hash value
 // bucket()
-int NBHashTable::bucket(int h, int index) {
-	return buckets[(h + (index * (index + 1)) /2) % kSize];
+int* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
+	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
 }
 
-bool NBHashTable::doesBucketContainCollision(int h, int index) {
-	return (bucket(h,index) != 0 && hash(bucket(h,index)) == h);
+bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
+	return (getBucketValue(startIndex,probeJumps) != 0 && hash(*getBucketValue(startIndex,probeJumps)) == startIndex);
 }
 
 
 // Bounds
 
-void NBHashTable::initProbeBound(int h) {
-	bounds[h] = 0;
+void NBHashTable::initProbeBound(int startIndex) {
+	bounds[startIndex] = 0;
 }
 
-int NBHashTable::getProbeBound(int h) {
-	return bounds[h];
+int NBHashTable::getProbeBound(int startIndex) {
+	return bounds[startIndex];
 }
 
-void NBHashTable::conditionallyRaiseBound(int h, int index) {
-	bounds[h] = (h > index) ? h : index;
+void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
+	bounds[startIndex] = (startIndex > probeJumps) ? startIndex : probeJumps;
 }
 
-void NBHashTable::conditionallyLowerBound(int h, int index) {
-	if (index > 0) {
-		int i = index - 1;
-		while (i > 0 && -doesBucketContainCollision(h,i)) {
+void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
+	if (probeJumps > 0) {
+		int i = probeJumps - 1;
+		while (i > 0 && -doesBucketContainCollision(startIndex,probeJumps)) {
 			i--;
 		}
-		bounds[h] = i;
+		bounds[startIndex] = i;
 	}
 }
 

@@ -16,13 +16,13 @@ class NBHashTable {
 	std::mutex mainMutex;
 	int kSize, *bounds, *buckets;
 	
-	int bucket(int h, int index);
+	int* getBucketValue(int startIndex, int probeJumps);
 	bool doesBucketContainCollision(int h, int index);
 	void initProbeBound(int h);
 	int getProbeBound(int h);
 	void conditionallyRaiseBound(int h, int index);
 	void conditionallyLowerBound(int h, int index);
-	int hash(int n);
+	int hash(int value);
 	
 	public:
 		NBHashTable(int ks = 8);
