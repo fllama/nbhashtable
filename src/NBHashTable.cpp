@@ -19,30 +19,54 @@ NBHashTable::~NBHashTable() {
 	delete buckets;
 }
 
-// The threadid is probably not necessary
-// But I just wanted to print something out
+bool NBHashTable::insert(NBType n) {
+	mainMutex.lock();
+	if (DEBUG) printf("Inserting: %d\n", n);
+	int hashValue = hash(n);
+	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
+		int *bucketValue = getBucketValue(hashValue, probeJumps);
+		if (*bucketValue == EMPTY_FLAG) {
+			*bucketValue = n;
+			conditionallyRaiseBound(hashValue, probeJumps);
+			printHashTableInfo();
+			mainMutex.unlock();
+			return true;
+		}
+	}
+	mainMutex.unlock();
+	return false;
+}
+
 bool NBHashTable::put(NBType n) {
 	return this->insert(n);
 }
 
 bool NBHashTable::contains(NBType n) {
+	mainMutex.lock();
 	// Get the hash value for n
 	int hashIndex = hash(n), jumps;
 	
 	// check to see if this value is equal
 	for(jumps = 0; jumps <= getProbeBound(hashIndex) && jumps < kSize; jumps++) {
-		if(*getBucketValue(hashIndex, jumps) == n) return true;
+		if(*getBucketValue(hashIndex, jumps) == n) {
+			mainMutex.unlock();
+			return true;
+		}
 	}
 	
 	// If we're here, either we checked too many times or we exceeded our probe bound range
+	mainMutex.unlock();
 	return false;
 }
 
 int NBHashTable::size() {
+	mainMutex.lock();
 	return kSize;
+	mainMutex.unlock();
 }
 
 bool NBHashTable::remove(NBType n) {
+	mainMutex.lock();
 	if (DEBUG) printf("Removing: %d\n", n);
 	//The jump index
 	int probeJumps;
@@ -56,6 +80,7 @@ bool NBHashTable::remove(NBType n) {
 	//Checks if n was found
 	if(probeJumps > bounds[hashValue]){
 		if (DEBUG) printHashTableInfo();
+		mainMutex.unlock();
 		return false;
 	}
 	
@@ -67,14 +92,28 @@ bool NBHashTable::remove(NBType n) {
 		conditionallyLowerBound(hashValue, probeJumps);
 
 	if (DEBUG) printHashTableInfo();
-		
+	mainMutex.unlock();
+
 	return true;
 }
+
 
 // Hash
 
 int NBHashTable::hash(NBType n) {
 	return (n % kSize);
+}
+
+
+void NBHashTable::printHashTableInfo() {
+	for (int i = 0; i < kSize; i++) {
+		printf("%d\t", bounds[i]);
+	}
+	printf("\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%d\t", buckets[i]);
+	}
+	printf("\n\n");
 }
 
 
@@ -111,33 +150,4 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 		}
 		bounds[startIndex] = i;
 	}
-}
-
-
-// Public
-
-bool NBHashTable::insert(NBType n) {
-	if (DEBUG) printf("Inserting: %d\n", n);
-	int hashValue = hash(n);
-	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
-		int *bucketValue = getBucketValue(hashValue, probeJumps);
-		if (*bucketValue == EMPTY_FLAG) {
-			*bucketValue = n;
-			conditionallyRaiseBound(hashValue, probeJumps);
-			printHashTableInfo();
-			return true;
-		}
-	}
-	return false;
-}
-
-void NBHashTable::printHashTableInfo() {
-	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", bounds[i]);
-	}
-	printf("\n");
-	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", buckets[i]);
-	}
-	printf("\n\n");
 }

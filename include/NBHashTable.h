@@ -13,7 +13,6 @@ typedef int NBType;
 
 class NBHashTable {
 	
-	std::mutex printStream;
 	std::mutex mainMutex;
 	int kSize, *bounds, *buckets;
 	
