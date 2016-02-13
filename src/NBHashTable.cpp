@@ -1,6 +1,6 @@
 #include "NBHashTable.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 NBHashTable::NBHashTable(int ks) {
 	int i;
@@ -28,7 +28,7 @@ bool NBHashTable::insert(NBType n) {
 		if (*bucketValue == EMPTY_FLAG) {
 			*bucketValue = n;
 			conditionallyRaiseBound(hashValue, probeJumps);
-			printHashTableInfo();
+			if(DEBUG) printHashTableInfo();
 			mainMutex.unlock();
 			return true;
 		}
