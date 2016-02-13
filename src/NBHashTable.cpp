@@ -26,7 +26,7 @@ void NBHashTable::put(NBType n) {
 
 // bool NBHashTable::contains(int n);
 // int NBHashTable::size();
-void NBHashTable::remove(int n)
+bool NBHashTable::remove(int n)
 {
     //The jump index
     int probeJumps;

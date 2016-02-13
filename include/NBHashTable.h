@@ -31,7 +31,7 @@ class NBHashTable {
 		// bool lookup(int);
 		// bool contains(int);
 		// int size();
-		// void remove();
+		bool remove(int);
 };
 
 #endif

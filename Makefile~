@@ -1,7 +1,7 @@
 all: default
 
 BUILD_DIR=build
-CFLAGS=-std=c++11 -I include/ -pthread
+CFLAGS=-std=c++11 -I include/ -pthreads
 
 build/.placeholder:
 	mkdir -vp $(BUILD_DIR)
