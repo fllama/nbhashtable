@@ -6,7 +6,7 @@
 
 #include "NBHashTable.h"
 
-#define NUM_TRIALS 5
+#define NUM_TRIALS 500000
 #define TABLE_SIZE 1000
 
 using namespace std;
@@ -49,14 +49,14 @@ void generator(NBHashTable *ht, int tid)
         {
             case 0:
                 if(ht->put(num))
-                    std::cout << "PASS: Successfully put " << num << std::endl;
-                else std::cout << "FAIL: Unsuccessfully put " << num << std::endl;
+                    printf("PASS: Successfully put %d\n", num);
+                else printf("FAIL: Unsuccessfully put %d\n", num);
                 break;
             case 1:
                 if(ht->contains(num))
                     if(ht->remove(num))
-                        std::cout << "PASS: Successfully removed " << num << std::endl;
-                    else std::cout << "FAIL: Unsuccessfully removed " << num << std::endl;
+                        printf("PASS: Successfully removed %d\n", num);
+                    else printf("FAIL: Unsuccessfully removed %d\n", num);
         }
     }
 }
