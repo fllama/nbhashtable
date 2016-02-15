@@ -1,5 +1,8 @@
 build/
 .placeholder
+.DS_Store
+Report.pdf
+
 
 # Compiled Object files
 *.slo
@@ -29,5 +32,3 @@ build/
 *.exe
 *.out
 *.app
-
-.DS_Store
