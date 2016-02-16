@@ -433,7 +433,7 @@
 % As a general rule, do not put math, special symbols or citations
 % in the abstract or keywords.
 \begin{abstract}
-The abstract goes here. \hl{Should we have a real abstract? This was in the template, but I'm not sure.}
+In the paper “Non-blocking Hashtables with Open Addressing”, Chris Purcell and Tim Harris propose a non-blocking hashtable that utilizes buckets, probe bounds, and open addressing for standard hashtable functionality and achieves non-blocking behavior with the use of atomic operations and custom word types. We implemented a sequential version of the proposed hashtable in a C++11 class that shares the core hashtable implementation but eliminates much of what makes it parallel. Our implementation was tested over a series of trials and resulted in a degradation of performance as the number of of threads performing operations was increased (I hope?).
 \end{abstract}
 
 % Note that keywords are not normally used for peerreview papers.
@@ -475,7 +475,8 @@ The abstract goes here. \hl{Should we have a real abstract? This was in the temp
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{S}{oon} we will have to replace this first section with a bold, grand introduction of this wonderful paper. \hl{Insert a real introduction here.}
+\IEEEPARstart{I}{n} this paper we will describe a  sequential version of a non-blocking hashtable described by Chris Purcell and Tim Harris in their paper “Non-blocking Hashtables with Open Addressing”. We implemented the data structure a a C++11 class and performed a series of tests to assess its performance.
+To describe our implementation and test results, we will first in Section 1 briefly describe the hashtable proposed in the original paper. Section 2 will describe the details of our C++11 sequential implementation of the hashtable. Lastly, we will describe our performance tests and analyze the results to give an overall view of the efficiency of a sequential version of the described hashtable.
 
 
 % You must have at least 2 lines in the paragraph with the drop letter
@@ -626,7 +627,7 @@ As described in the paper, bound values are incremented with the addition of val
 \subsection{Sequential Modifications}
 To keep the algorithm parallel and lock-free, the pseudocode provided uses lock-free atomic compare-and-swap functions when accessing and modifying bucket and bounds values. The paper also specifies packing a state, a version count, and a bucket value into a single word value for each bucket for atomic access and modification. The paper also suggests using a single word value that contains a scanning bit and a bounds value for each bounds value.
 
-These modifications make the structure lock-free and parallel, so our implementation does not use them in order to keep the structure sequential. Bucket and bounds values are simply integer values that represent the bucket value, without any additional state values. Reads and writes to the bounds and buckets arrays are done directly without atomic operations. To keep the structure sequential and thread-safe, we use a single std::mutex object that is locked for every public method call and unlocked at the end of every public method. This guarantees only one public method can be executed at a time so that no two threads will be interacting with the hashtable at the same time. If one thread is interacting with the hashtable and another thread attempts to call one of its public methods simultaneously, it will have to wait until the first thread is finished. At this point, the holding thread will unlock the mutex, and a waiting thread will begin its interaction by locking it. Because NBHashTable public methods cannot execute simultaneously, sequential performance is guaranteed.
+These modifications make the structure lock-free and parallel, so our implementation does not use them in order to keep the structure sequential. Bucket and bounds values are simply integer values that represent the bucket value, without any additional state values. Reads and writes to the bounds and buckets arrays are done directly without atomic operations. To keep the structure sequential and thread-safe, we use a single std::mutex object that is locked for every public method call and unlocked at the end of every public method. Even though this allows blocking and eliminates the non-blocking nature of the proposed hashtable, this guarantees only one public method can be executed at a time so that no two threads will be interacting with the hashtable at the same time. If one thread is interacting with the hashtable and another thread attempts to call one of its public methods simultaneously, it will have to wait until the first thread is finished. At this point, the holding thread will unlock the mutex, and a waiting thread will begin its interaction by locking it. Because NBHashTable public methods cannot execute simultaneously, sequential performance is guaranteed.
 
 
 \section{Testing and Performance}
@@ -690,6 +691,8 @@ Execution time is important to test because it allows us to compare the specific
 \section{Analysis and Conclusion}
 
 \hl{Here we talk about our results, compare them to the original paper.}
+The non-blocking hashtable proposed by Chris Purcell and Tim Harris uses a number of operations and specialized data types to achieve atomicity non-blocking functionality.  To make our implementation sequential, we were able to simplify the internal structure of the hashtable by eliminating these features and only allowing one thread to modify the hashtable at a time. Though this differentiates it from the proposed implementation and is not non-blocking, it maintains the same hashtable open addressing functionality with the use of probe scanning phases. The result is a sequential version of the proposed hashtable structure.
+
 
 % if have a single appendix:
 %\appendix[Proof of the Zonklar Equations]
