@@ -1,0 +1,8 @@
+Insert:
+In order to insert into the table, the hash value must first be obtained. Starting from the bucket corresponding to the hash value, continue quadratic probing until they find a bucket that contains an EMPTY value. If the number of probes to get to that slot was greater than the upper bound stored for the inserted item's hash value, the upper bound should be updated to the number of probe jumps used to reach the EMPTY slot. Otherwise, the probe bound should remain unchanged. If at any point the number of probe jumps exceeds the size of the hash table, the function should return false to signal that the collision was unresolved and the insert operation failed.
+
+Contains:
+In order to check for an element in the table, the hash value must first be obtained. Then starting from the bucket corresponding to the hash value, probing should continue until the upper bound of the hash value is exceeded or until the element to be searched for is found. If the element is found return true. Otherwise, if the bounds are exceeded, return false.
+
+Remove:
+In order to remove an element from the table, the hash value for the element must first be obtained. Starting from the bucket corresponding to the hash value, continue probing until the element is found or the upper bounds are exceeded. If the upper bound is exceeded return false to signal that the item was unable to be removed. If the item is found set the bucket its located in to EMPTY. If the number of probe jumps it takes to get to the bucket is equal to the upper bounds of the hash value, decrement the upper bound until probing by the number contained within the upper bound results in a non-empty bucket, or the upper bound equals zero.
