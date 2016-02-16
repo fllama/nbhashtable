@@ -112,13 +112,15 @@
 
 % *** GRAPHICS RELATED PACKAGES ***
 %
+\usepackage{pgfplots}
+
 \ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
+  %\usepackage[pdftex]{graphicx}
   % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
+  %\graphicspath{{img/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+  %\DeclareGraphicsExtensions{.jpg,.pdf,.jpeg,.png}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
@@ -507,15 +509,6 @@ The abstract goes here. \hl{Should we have a real abstract? This was in the temp
 % option should be used if it is desired that the figures are to be
 % displayed while in draft mode.
 %
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
 
 % Note that the IEEE typically puts floats only at the top, even when this
 % results in a large percentage of a column being occupied by floats.
@@ -650,7 +643,47 @@ We have included our sample test cases in our initial submission document, under
 
 Execution time is important to test because it allows us to compare the specific operations of the algorithm and determine how it should be used most efficiently. It also allows us to compare our implementation to the expected time from the original paper, and potentially see the limits of our currently sequential solution.
 
+
+
+%\includegraphics[width=100px]{kitten}
+
 \hl{More}
+
+%\begin{figure}[!h]
+%\centering
+%\includegraphics[width=2.5in]{kitten}
+%\caption{Trial 1 - 75\% insertion, 25\% deletion, 0\% contains operations.}
+%\label{fig_sim}
+%\end{figure}
+
+
+\begin{tikzpicture}
+\begin{axis}[
+    title={Execution time for Trial 1},
+    xlabel={Number of threads},
+    ylabel={Execution time [seconds]},
+    xmin=1, xmax=8,
+    ymin=0, ymax=10,
+    xtick={1,2,4,8},
+    ytick={0, 2.5, 5, 7.5, 10},
+    legend pos=north west,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+ 
+\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+    %0.2487	6.4415
+    (1, 0.2487)(2,6.4415)
+    };
+    \legend{CuSO$_4\cdot$5H$_2$O}
+ 
+\end{axis}
+\end{tikzpicture}
+
 
 \section{Analysis and Conclusion}
 

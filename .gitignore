@@ -1,8 +1,9 @@
 build/
+test/
 .placeholder
 .DS_Store
 Report.pdf
-
+.texpadtmp
 
 # Compiled Object files
 *.slo
