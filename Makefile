@@ -1,4 +1,4 @@
-all: 
+all: tests
 
 BUILD_DIR=build
 TEST_RESULT_DIR=test
@@ -19,9 +19,9 @@ default: build/.placeholder
 	g++ $(CFLAGS) -o $(BUILD_DIR)/nbhashtable $(MAIN_FILE) NBHashTable.cpp
 	@echo Build complete. Placed executable into $(BUILD_DIR)/ directory.
 
-correctness: test/.placeholder
-	g++ $(CFLAGS) -o (BUILD_DIR)/correctness1 correctness1.cpp NBHashTable.cpp
-	g++ $(CFLAGS) -o (BUILD_DIR)/correctness2 correctness2.cpp NBHashTable.cpp
+correctness: build/.placeholder test/.placeholder
+	g++ $(CFLAGS) -o $(BUILD_DIR)/correctness1 correctness1.cpp NBHashTable.cpp
+	g++ $(CFLAGS) -o $(BUILD_DIR)/correctness2 correctness2.cpp NBHashTable.cpp
 	@echo Correctness executable file built and placed into $(BUILD_DIR)/
 
 executionTime: build/.placeholder test/.placeholder

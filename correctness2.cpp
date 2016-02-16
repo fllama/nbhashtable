@@ -45,18 +45,16 @@ void generator(NBHashTable *ht, int tid)
         //Generates a random number
         num = rand() % 100;
         
-        switch(rand() % 2)
-        {
-            case 0:
-                if(ht->put(num))
-                    printf("PASS: Successfully put %d\n", num);
-                else printf("FAIL: Unsuccessfully put %d\n", num);
-                break;
-            case 1:
-                if(ht->contains(num))
-                    if(ht->remove(num))
-                        printf("PASS: Successfully removed %d\n", num);
-                    else printf("FAIL: Unsuccessfully removed %d\n", num);
+        int result = rand();
+        if(result % 2 == 0) {
+            if(ht->put(num))
+                printf("PASS: Successfully put %d\n", num);
+            else printf("FAIL: Unsuccessfully put %d\n", num);
+        } else {
+            if(ht->contains(num)) {
+                if(ht->remove(num)) printf("PASS: Successfully removed %d\n", num);
+                else printf("FAIL: Unsuccessfully removed %d\n", num);
+            }
         }
     }
 }
