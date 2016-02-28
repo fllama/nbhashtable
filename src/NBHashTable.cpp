@@ -151,3 +151,41 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 		bounds[startIndex] = i;
 	}
 }
+
+/*
+
+VersionState and ProbeBound types
+
+*/
+
+/*
+
+int NBHashTable::getState(VersionState vs) {
+	int msb = sizeof(VersionState)*8 - 1;
+	int stateID = 0;
+	
+	// Start from our max bit size and count down
+	for(int bit = 0; bit < NUM_STATE_BITS; bit++) {
+		int pow2val = 1 << (NUM_STATE_BITS - bit);
+		stateID += pow2val*getBitValue(vs, msb-bit);
+	}
+	
+	return stateID;
+}
+
+int NBHashTable::getVersion(VersionState vs);
+int NBHashTable::getBound(ProbeBound pb);
+bool NBHashTable::getScanning(ProbeBound pb);
+VersionState NBHashTable::setState(VersionState vs, int s);
+VersionState NBHashTable::setVersion(VersionState vs, int v);
+VersionState NBHashTable::setVersionState(int v, int s);
+ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
+ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
+ProbeBound NBHashTable::setProbeBound(int p, bool s);
+
+// "bit" must be from 0 to n-1 for an N-bit integer
+int NBHashTable::getBitValue(int num, int bit) {
+	return num & (1 << bit);
+}
+
+*/

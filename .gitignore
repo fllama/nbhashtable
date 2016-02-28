@@ -1,5 +1,6 @@
 build/
 .placeholder
+.texpadtmp
 
 # Compiled Object files
 *.slo
