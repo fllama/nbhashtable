@@ -17,6 +17,17 @@ typedef int NBType;
 typedef int VersionState;
 typedef int ProbeBound;
 
+// This is the enum for all the bucket states
+enum NB_BUCKET_STATE
+{
+    BUSY, 
+    MEMBER,
+    INSERTING,
+    EMPTY,
+    COLLIDED,
+    VISIBLE
+};
+
 class NBHashTable {
 	
 	std::mutex mainMutex;

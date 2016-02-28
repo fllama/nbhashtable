@@ -66,35 +66,29 @@ int NBHashTable::size() {
 }
 
 bool NBHashTable::remove(NBType n) {
-	mainMutex.lock();
-	if (DEBUG) printf("Removing: %d\n", n);
-	//The jump index
-	int probeJumps;
-	
-	//Gets the hash
-	int hashValue = hash(n);
-	
-	//Finds the correct bucket
-	for(probeJumps = 0; probeJumps <= bounds[hashValue] && *getBucketValue(hashValue, probeJumps) != n; probeJumps++);
-	
-	//Checks if n was found
-	if(probeJumps > bounds[hashValue]){
-		if (DEBUG) printHashTableInfo();
-		mainMutex.unlock();
-		return false;
-	}
-	
-	//Sets the slot to empty
-	*getBucketValue(hashValue, probeJumps) = EMPTY_FLAG;
-	
-	//Checks if it was the last bound
-	if(probeJumps == bounds[hashValue])
-		conditionallyLowerBound(hashValue, probeJumps);
-
-	if (DEBUG) printHashTableInfo();
-	mainMutex.unlock();
-
-	return true;
+	//Get the passed values hash index and probe bound
+    int hashIndex = hash(n);
+    int probeBound = getProbeBound(n);
+    
+    //Loop through all the probe jumps
+    for(int probeJumps; probeJumps < probeBound; probeJumps++){
+        
+        //Gets the version state for the bucket of the current iteration
+        VersionState currentVersionState = getBucketValue(hashIndex, probeJumps);
+        
+        //Checks to make sure that the key matches and that the bucket is an actual member
+        if(getState(currentVersionState) == MEMBER && getBucketValue(hashIndex, probeJumps)->key == n){
+            if(atomic_compare_exchange_strong(getBucketValue(hashIndex, probeJumps)->vs,
+            setVersionState(currentVersionState.version, MEMBER),
+            setVersionState(currentVersionState.version, BUSY))){
+                conditionallyLowerBound(hashIndex, probeJumps);
+                getBucketValue(hashIndex, probeJumps)->vs = setVersion(currentVersionState.version, EMPTY);
+                return true;
+            }
+        }
+    }
+    
+    return false;
 }
 
 
