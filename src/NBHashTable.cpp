@@ -11,8 +11,8 @@ NBHashTable::NBHashTable(int ks) {
 	for(i = 0; i < kSize; i++) initProbeBound(i);
 	for(i = 0; i < kSize; i++) {
 		VersionState *vs = setVersionState(0,EMPTY);
-		BucketT bucket = {*vs, EMPTY_FLAG};
-		//buckets[i] = {vs, EMPTY_FLAG};
+		buckets[i].vs = vs;
+		buckets[i].key = EMPTY_FLAG;
 	}
 	
 }
@@ -23,13 +23,14 @@ NBHashTable::~NBHashTable() {
 }
 
 bool NBHashTable::insert(NBType n) {
+	/*
 	mainMutex.lock();
 	if (DEBUG) printf("Inserting: %d\n", n);
 	int hashValue = hash(n);
 	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
-		int *bucketValue = getBucketValue(hashValue, probeJumps);
-		if (*bucketValue == EMPTY_FLAG) {
-			*bucketValue = n;
+		BucketT *bucketValue = getBucketValue(hashValue, probeJumps);
+		if (bucketValue->key == EMPTY_FLAG) {
+			bucketValue->key = n;
 			conditionallyRaiseBound(hashValue, probeJumps);
 			if(DEBUG) printHashTableInfo();
 			mainMutex.unlock();
@@ -37,7 +38,9 @@ bool NBHashTable::insert(NBType n) {
 		}
 	}
 	mainMutex.unlock();
+	*/
 	return false;
+
 }
 
 bool NBHashTable::put(NBType n) {
@@ -45,6 +48,7 @@ bool NBHashTable::put(NBType n) {
 }
 
 bool NBHashTable::contains(NBType n) {
+	/*
 	mainMutex.lock();
 	// Get the hash value for n
 	int hashIndex = hash(n), jumps;
@@ -59,6 +63,7 @@ bool NBHashTable::contains(NBType n) {
 	
 	// If we're here, either we checked too many times or we exceeded our probe bound range
 	mainMutex.unlock();
+	*/
 	return false;
 }
 
@@ -104,6 +109,7 @@ int NBHashTable::hash(NBType n) {
 
 
 void NBHashTable::printHashTableInfo() {
+	/*
 	for (int i = 0; i < kSize; i++) {
 		printf("%d\t", bounds[i]);
 	}
@@ -112,17 +118,24 @@ void NBHashTable::printHashTableInfo() {
 		printf("%d\t", buckets[i]);
 	}
 	printf("\n\n");
+	*/
 }
 
 
 // Bucket
 
 BucketT* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
+	/*
 	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
+	*/
+	return NULL; // Placeholder - remove
 }
 
 bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
+	/*
 	return (*getBucketValue(startIndex,probeJumps) != EMPTY_FLAG && hash(*getBucketValue(startIndex,probeJumps)) == startIndex);
+	*/
+	return false; // Placeholder - remove
 }
 
 
@@ -137,7 +150,9 @@ int NBHashTable::getProbeBound(int startIndex) {
 }
 
 void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
+	/*
 	bounds[startIndex] = (bounds[startIndex] > probeJumps) ? bounds[startIndex] : probeJumps;
+	*/
 }
 
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
@@ -176,7 +191,9 @@ VersionState and ProbeBound types
 // bool NBHashTable::getScanning(ProbeBound pb);
 // VersionState NBHashTable::setState(VersionState vs, int s);
 // VersionState NBHashTable::setVersion(VersionState vs, int v);
- VersionState* NBHashTable::setVersionState(int v, int s);
+ VersionState* NBHashTable::setVersionState(int v, int s) {
+ 	return NULL; //Placeholder - remove
+ }
 // ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
 // ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
 // ProbeBound NBHashTable::setProbeBound(int p, bool s);

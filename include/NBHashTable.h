@@ -18,7 +18,7 @@ typedef std::atomic<int> VersionState;
 typedef std::atomic<int> ProbeBound;
 
 struct BucketT {
-	VersionState vs;
+	VersionState *vs;
 	NBType key;
 };
 
