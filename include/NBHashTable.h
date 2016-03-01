@@ -14,10 +14,15 @@ typedef int NBType;
 
 // These are our two values that will be atomically swapped
 // We'll write methods that accept
-typedef int VersionState;
-typedef int ProbeBound;
+typedef std::atomic<int> VersionState;
+typedef std::atomic<int> ProbeBound;
 
-// This is the enum for all the bucket states
+struct BucketT {
+	VersionState vs;
+	NBType key;
+};
+
+// Possible states of each VersionState
 enum NB_BUCKET_STATE
 {
     BUSY, 
@@ -31,9 +36,11 @@ enum NB_BUCKET_STATE
 class NBHashTable {
 	
 	std::mutex mainMutex;
-	int kSize, *bounds, *buckets;
+	int kSize;
+	ProbeBound *bounds;
+	BucketT *buckets;
 	
-	int* getBucketValue(int startIndex, int probeJumps);
+	BucketT* getBucketValue(int startIndex, int probeJumps);
 	bool doesBucketContainCollision(int startIndex, int probeJumps);
 	void initProbeBound(int startIndex);
 	int getProbeBound(int startIndex);
@@ -49,10 +56,10 @@ class NBHashTable {
 	bool getScanning(ProbeBound pb);
 	VersionState setState(VersionState vs, int s);
 	VersionState setVersion(VersionState vs, int v);
-	VersionState setVersionState(int v, int s);
+	VersionState* setVersionState(int v, int s);
 	ProbeBound setScanning(ProbeBound pb, bool s);
 	ProbeBound setProbeBound(ProbeBound pb, int p); // Same as setBound, just another name
-	ProbeBound setProbeBound(int p, bool s);
+	ProbeBound newProbeBound(int p, bool s);
 	int getBitValue(int num, int bit);
 	
 	

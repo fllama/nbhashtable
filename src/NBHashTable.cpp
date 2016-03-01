@@ -6,12 +6,15 @@ NBHashTable::NBHashTable(int ks) {
 	int i;
 	
 	kSize = ks;
-	bounds = new int[kSize];
-	buckets = new int[kSize];
+	bounds = new std::atomic<int>[kSize];
+	buckets = new BucketT[kSize];
 	for(i = 0; i < kSize; i++) initProbeBound(i);
-	for(i = 0; i < kSize; i++) buckets[i] = EMPTY_FLAG;
+	for(i = 0; i < kSize; i++) {
+		VersionState *vs = setVersionState(0,EMPTY);
+		BucketT bucket = {*vs, EMPTY_FLAG};
+		//buckets[i] = {vs, EMPTY_FLAG};
+	}
 	
-	// TODO: Allocate table for actual data
 }
 
 NBHashTable::~NBHashTable() {
@@ -66,6 +69,7 @@ int NBHashTable::size() {
 }
 
 bool NBHashTable::remove(NBType n) {
+	/*
 	//Get the passed values hash index and probe bound
     int hashIndex = hash(n);
     int probeBound = getProbeBound(n);
@@ -87,7 +91,7 @@ bool NBHashTable::remove(NBType n) {
             }
         }
     }
-    
+    */
     return false;
 }
 
@@ -113,7 +117,7 @@ void NBHashTable::printHashTableInfo() {
 
 // Bucket
 
-int* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
+BucketT* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
 	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
 }
 
@@ -152,34 +156,33 @@ VersionState and ProbeBound types
 
 */
 
-/*
 
-int NBHashTable::getState(VersionState vs) {
-	int msb = sizeof(VersionState)*8 - 1;
-	int stateID = 0;
+
+// int NBHashTable::getState(VersionState vs) {
+// 	int msb = sizeof(VersionState)*8 - 1;
+// 	int stateID = 0;
 	
-	// Start from our max bit size and count down
-	for(int bit = 0; bit < NUM_STATE_BITS; bit++) {
-		int pow2val = 1 << (NUM_STATE_BITS - bit);
-		stateID += pow2val*getBitValue(vs, msb-bit);
-	}
+// 	// Start from our max bit size and count down
+// 	for(int bit = 0; bit < NUM_STATE_BITS; bit++) {
+// 		int pow2val = 1 << (NUM_STATE_BITS - bit);
+// 		stateID += pow2val*getBitValue(vs, msb-bit);
+// 	}
 	
-	return stateID;
-}
+// 	return stateID;
+// }
 
-int NBHashTable::getVersion(VersionState vs);
-int NBHashTable::getBound(ProbeBound pb);
-bool NBHashTable::getScanning(ProbeBound pb);
-VersionState NBHashTable::setState(VersionState vs, int s);
-VersionState NBHashTable::setVersion(VersionState vs, int v);
-VersionState NBHashTable::setVersionState(int v, int s);
-ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
-ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
-ProbeBound NBHashTable::setProbeBound(int p, bool s);
+// int NBHashTable::getVersion(VersionState vs);
+// int NBHashTable::getBound(ProbeBound pb);
+// bool NBHashTable::getScanning(ProbeBound pb);
+// VersionState NBHashTable::setState(VersionState vs, int s);
+// VersionState NBHashTable::setVersion(VersionState vs, int v);
+ VersionState* NBHashTable::setVersionState(int v, int s);
+// ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
+// ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
+// ProbeBound NBHashTable::setProbeBound(int p, bool s);
 
-// "bit" must be from 0 to n-1 for an N-bit integer
-int NBHashTable::getBitValue(int num, int bit) {
-	return num & (1 << bit);
-}
+// // "bit" must be from 0 to n-1 for an N-bit integer
+// int NBHashTable::getBitValue(int num, int bit) {
+// 	return num & (1 << bit);
+// }
 
-*/
