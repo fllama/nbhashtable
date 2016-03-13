@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <mutex>
 #define EMPTY_FLAG -1
-#define NUM_STATE_BITS 3
+//#define NUM_STATE_BITS 3
 
 // This typedef exists solely to assist in future code understanding
 // If we ever wish to add support for multiple types, rather than just ints
@@ -14,23 +14,12 @@ typedef int NBType;
 
 // These are our two values that will be atomically swapped
 // We'll write methods that accept
-typedef int VersionState;
-typedef int ProbeBound;
+//typedef int VersionState;
+//typedef int ProbeBound;
 
 struct BucketT {
 	VersionState *vs;
 	NBType key;
-};
-
-// Possible states of each VersionState
-enum NB_BUCKET_STATE
-{
-    BUSY, 
-    MEMBER,
-    INSERTING,
-    EMPTY,
-    COLLIDED,
-    VISIBLE
 };
 
 class NBHashTable {
@@ -48,18 +37,6 @@ class NBHashTable {
 	void conditionallyLowerBound(int startIndex, int probeJumps);
 	int hash(NBType n);
 	void printHashTableInfo();
-	
-	// Combined Types, getters and setters
-	
-	int getBound(ProbeBound pb);
-	bool getScanning(ProbeBound pb);
-	VersionState setState(VersionState vs, int s);
-	VersionState setVersion(VersionState vs, int v);
-	VersionState* setVersionState(int v, int s);
-	ProbeBound setScanning(ProbeBound pb, bool s);
-	ProbeBound setProbeBound(ProbeBound pb, int p); // Same as setBound, just another name
-	ProbeBound newProbeBound(int p, bool s);
-	bool getBit(int num, int bit);
 	
 	
 	public:
