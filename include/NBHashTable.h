@@ -3,6 +3,10 @@
 
 #include <cstdio>
 #include <mutex>
+#include <atomic>
+#include <algorithm> 
+#include "ProbeBound.h"
+#include "VersionState.h"
 #define EMPTY_FLAG -1
 //#define NUM_STATE_BITS 3
 

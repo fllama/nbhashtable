@@ -6,12 +6,10 @@ NBHashTable::NBHashTable(int ks) {
 	int i;
 	
 	kSize = ks;
-	bounds = new std::atomic<int>[kSize];
 	buckets = new BucketT[kSize];
 	for(i = 0; i < kSize; i++) initProbeBound(i);
 	for(i = 0; i < kSize; i++) {
-		VersionState *vs = setVersionState(0,EMPTY);
-		buckets[i].vs = vs;
+		buckets[i].vs = new VersionState(0,VersionState::State::EMPTY);
 		buckets[i].key = EMPTY_FLAG;
 	}
 	
@@ -65,7 +63,7 @@ bool NBHashTable::contains(NBType n) {
 	mainMutex.unlock();
 	*/
 	return false;
-}''
+}
 
 int NBHashTable::size() {
 	mainMutex.lock();
@@ -142,26 +140,61 @@ bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
 // Bounds
 
 void NBHashTable::initProbeBound(int index) {
-	bounds[index] = 0;
+	//DONE
+	bounds[index].setScanning(false);
+	bounds[index].setBound(0);
 }
 
 int NBHashTable::getProbeBound(int startIndex) {
-	return bounds[startIndex];
+	// DONE
+	return ProbeBound::getBound(bounds[startIndex].load());
 }
 
 void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
-	/*
-	bounds[startIndex] = (bounds[startIndex] > probeJumps) ? bounds[startIndex] : probeJumps;
-	*/
+	// DONE
+	while (true) {
+		int pb = bounds[startIndex].load();
+		int oldBound = ProbeBound::getBound(pb);
+		bool scanning = ProbeBound::isScanning(pb);
+
+		int newBound = std::max(oldBound, probeJumps);
+		ProbeBound *newPbPointer = new ProbeBound(false,newBound);
+		int newPb = newPbPointer->load();
+		if (bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
+			return;
+		}
+	}
+
 }
 
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
+	// DONE
+	int pb = bounds[startIndex].load();
+	int bound = ProbeBound::getBound(pb);
+	bool scanning = ProbeBound::isScanning(pb);
+	if (scanning) {
+		ProbeBound *newPbPointer = new ProbeBound(false,bound);
+		int newPb = newPbPointer->load();
+		bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed);
+	}
 	if (probeJumps > 0) {
-		int i = probeJumps - 1;
-		while (i > 0 && !doesBucketContainCollision(startIndex,probeJumps)) {
-			i--;
+
+		ProbeBound *cmpPbPointer = new ProbeBound(false,probeJumps);
+		ProbeBound *newPbPointer = new ProbeBound(true,probeJumps);
+		int cmpPb = cmpPbPointer->load();
+		int newPb = newPbPointer->load();
+		while (bounds[startIndex].compare_exchange_strong(cmpPb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
+			int i = probeJumps - 1;
+			while (i > 0 && !doesBucketContainCollision(startIndex,probeJumps)) {
+				i--;
+			}
+
+			ProbeBound *cmpPbPointer2 = new ProbeBound(true,probeJumps);
+			ProbeBound *newPbPointer2 = new ProbeBound(false,i);
+			int cmpPb2 = cmpPbPointer->load();
+			int newPb2 = newPbPointer->load();
+			bounds[startIndex].compare_exchange_strong(cmpPb2, newPb2, std::memory_order_release, std::memory_order_relaxed);
 		}
-		bounds[startIndex] = i;
 	}
 }
 
@@ -191,9 +224,9 @@ VersionState and ProbeBound types
 // bool NBHashTable::getScanning(ProbeBound pb);
 // VersionState NBHashTable::setState(VersionState vs, int s);
 // VersionState NBHashTable::setVersion(VersionState vs, int v);
-std::atomic<VersionState> NBHashTable::setVersionState(int v, int s) {
-	return NULL; //Placeholder - remove
-}
+// std::atomic<VersionState> NBHashTable::setVersionState(int v, int s) {
+// 	return NULL; //Placeholder - remove
+// }
 // ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
 // ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
 // ProbeBound NBHashTable::setProbeBound(int p, bool s);
