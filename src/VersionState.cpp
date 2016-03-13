@@ -2,55 +2,62 @@
 
 
 VersionState::VersionState(int version, VersionState::State state) {
-	printf("Making a version state with version %d\n", version);
-	switch(state) {
-		case VersionState::State::BUSY:
-			printf("This is the busy state.\n");
-			break;
-		case VersionState::State::MEMBER:
-			printf("This is the member state.\n");
-			break;
-		case VersionState::State::INSERTING:
-			printf("This is the inserting state.\n");
-			break;
-		case VersionState::State::EMPTY:
-			printf("This is the empty state.\n");
-			break;
-		case VersionState::State::COLLIDED:
-			printf("This is the collided state.\n");
-			break;
-		case VersionState::State::VISIBLE:
-			printf("This is the visible state.\n");
-			break;
-		default:
-			printf("I didn't recognize this state!\n");
-	}
-}
-
-VersionState::State VersionState::getState() {
-	return VersionState::State::BUSY;
-}
-
-int VersionState::getVersion() {
-	return 0;
-}
-
-VersionState::State VersionState::getState(int raw) {
-	return VersionState::State::BUSY;
-}
-
-int VersionState::getVersion(int raw) {
-	return 0;
+	set(version, state);
 }
 
 void VersionState::set(int version, VersionState::State state) {
-	
+	this->store(makeRaw(version, state));
 }
 
-void VersionState::setVersion(int version) {
+VersionState::State VersionState::getState(int raw) {
+	int sum = 0;
 	
+	// Convert the binary number to a base10 int
+	for(int i = NUM_STATE_BITS-1; i>=0; i--)
+		sum += (1 << i) * (int)(getBit(raw, i));
+	
+	return (VersionState::State) sum;
 }
 
-void VersionState::setState(VersionState::State state) {
+int VersionState::getVersion(int raw) {
+	return raw >> NUM_STATE_BITS;
+}
 	
+// Private helper functions below
+int VersionState::makeRaw(int version, VersionState::State state) {
+	version = version << NUM_STATE_BITS;
+	
+	// Make the least-sig bits of version reflect the state
+	for(int i = NUM_STATE_BITS-1; i >= 0; i--) 
+		version = setBit(version, getBit(state, i), i);
+	
+	return version;
+}
+
+bool VersionState::getBit(int val, int bit) {
+	return val & (0x1 << bit);
+}
+
+int VersionState::setBit(int num, bool value, int position) {
+	if(value) return num | (0x1 << position);
+	else return num & ~(0x1 << position);
+}
+
+const char *VersionState::getStateString(VersionState::State state) {	
+	switch(state) {
+		case VersionState::State::BUSY:
+			return "\"busy\"";
+		case VersionState::State::MEMBER:
+			return "\"member\"";
+		case VersionState::State::INSERTING:
+			return "\"inserting\"";
+		case VersionState::State::EMPTY:
+			return "\"empty\"";
+		case VersionState::State::COLLIDED:
+			return "\"collided\"";
+		case VersionState::State::VISIBLE:
+			return "\"visible\"";
+		default:
+			return "\"unknown\"";
+	}
 }

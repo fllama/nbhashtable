@@ -2,22 +2,26 @@
 #define PROBEBOUND_H
 
 #include <atomic>
+#include <cstdio>
 
 
 class ProbeBound : public std::atomic_int {
 	
+	static int makeRaw(int pb, bool scanning);
+	static bool getBit(int val, int bit);
+	
+	
 	public:
 		ProbeBound(int pb, bool scanning = false);
-		void set (int pb, bool scanning);
-		void setScanning(bool scanning);
-		void setBound(int pb);
+		void set(int pb, bool scanning);
 		
-		// Getters either take in the "this" value, or from an int
-		int getBound();
-		bool isScanning();
-		
+		// Getters must input using raw data from myProbeBound.load();
 		static int getBound(int raw);
 		static bool isScanning(int raw);
+		
+		// Helpers, public only for testing
+		static void printBits(int ref);
+		static int setBit(int, bool, int);
 };
 
 
