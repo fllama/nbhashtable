@@ -14,8 +14,8 @@ typedef int NBType;
 
 // These are our two values that will be atomically swapped
 // We'll write methods that accept
-typedef std::atomic<int> VersionState;
-typedef std::atomic<int> ProbeBound;
+typedef int VersionState;
+typedef int ProbeBound;
 
 struct BucketT {
 	VersionState *vs;
@@ -50,8 +50,7 @@ class NBHashTable {
 	void printHashTableInfo();
 	
 	// Combined Types, getters and setters
-	int getState(VersionState vs);
-	int getVersion(VersionState vs);
+	
 	int getBound(ProbeBound pb);
 	bool getScanning(ProbeBound pb);
 	VersionState setState(VersionState vs, int s);
@@ -60,7 +59,7 @@ class NBHashTable {
 	ProbeBound setScanning(ProbeBound pb, bool s);
 	ProbeBound setProbeBound(ProbeBound pb, int p); // Same as setBound, just another name
 	ProbeBound newProbeBound(int p, bool s);
-	int getBitValue(int num, int bit);
+	bool getBit(int num, int bit);
 	
 	
 	public:

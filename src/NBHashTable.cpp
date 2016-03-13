@@ -65,7 +65,7 @@ bool NBHashTable::contains(NBType n) {
 	mainMutex.unlock();
 	*/
 	return false;
-}
+}''
 
 int NBHashTable::size() {
 	mainMutex.lock();
@@ -191,9 +191,9 @@ VersionState and ProbeBound types
 // bool NBHashTable::getScanning(ProbeBound pb);
 // VersionState NBHashTable::setState(VersionState vs, int s);
 // VersionState NBHashTable::setVersion(VersionState vs, int v);
- VersionState* NBHashTable::setVersionState(int v, int s) {
- 	return NULL; //Placeholder - remove
- }
+std::atomic<VersionState> NBHashTable::setVersionState(int v, int s) {
+	return NULL; //Placeholder - remove
+}
 // ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
 // ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
 // ProbeBound NBHashTable::setProbeBound(int p, bool s);
