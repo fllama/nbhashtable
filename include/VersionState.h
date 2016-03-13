@@ -2,32 +2,37 @@
 #define VERSIONSTATE_H
 
 #include <atomic>
+#include <cstdio>
 
 #define NUM_STATE_BITS 3
 
 // Possible states of each VersionState
 
-enum NB_BUCKET_STATE
-{
-    BUSY, 
-    MEMBER,
-    INSERTING,
-    EMPTY,
-    COLLIDED,
-    VISIBLE
-};
-
 class VersionState : public std::atomic_int {
 	
 	public:
-		VersionState(int version, int state);
 		
-		int getState(VersionState vs);
-		int getVersion(VersionState vs);
+		enum State
+		{
+			BUSY,
+			MEMBER,
+			INSERTING,
+			EMPTY,
+			COLLIDED,
+			VISIBLE
+		};
 		
-		void set(int version, int state);
+		VersionState(int version, VersionState::State state);
+		
+		
+		VersionState::State getState();
+		int getVersion();
+		static VersionState::State getState(int raw);
+		static int getVersion(int raw);
+		
+		void set(int version, VersionState::State state);
 		void setVersion(int version);
-		void setState(int state);
+		void setState(VersionState::State state);
 };
 
 #endif
