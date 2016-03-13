@@ -9,5 +9,5 @@ build/.placeholder:
 	touch $(BUILD_DIR)/.placeholder
 
 default: build/.placeholder
-	g++ $(CFLAGS) -o build/nbhashtable $(MAIN_FILE) src/NBHashTable.cpp
+	g++ $(CFLAGS) -o build/nbhashtable $(MAIN_FILE) src/ProbeBound.cpp src/VersionState.cpp src/NBHashTable.cpp
 	@echo Build complete. Placed executable into $(BUILD_DIR)/ directory.
