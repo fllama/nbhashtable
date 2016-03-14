@@ -129,16 +129,25 @@ int NBHashTable::hash(NBType n) {
 
 
 void NBHashTable::printHashTableInfo() {
-	/*
+	mainMutex.lock();
+	printf("Bounds:\n");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", bounds[i]);
+		printf("%d\t", ProbeBound::getBound(bounds[i]));
 	}
-	printf("\n");
+	printf("\nKeys:\n");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", buckets[i]);
+		printf("%d\t", buckets[i].key);
+	}
+	printf("\nScanning:\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%s\t", ProbeBound::isScanning(bounds[i]) ? "Y" : "N");
+	}
+	printf("\nState:\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%s\t", VersionState::getStateString(VersionState::getState(buckets[i].vs->load())));
 	}
 	printf("\n\n");
-	*/
+	mainMutex.unlock();
 }
 
 
