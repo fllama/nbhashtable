@@ -37,10 +37,10 @@ bool NBHashTable::insert(NBType k) {
 		version = VersionState::getVersion(vs);
 		state = VersionState::getState(vs);
 
-		VersionState *cmpVsPointer = new VersionState(version,VersionState::State::EMPTY);
-		int cmpVs = cmpVsPointer->load();
-		VersionState *newVsPointer = new VersionState(version,VersionState::State::BUSY);
-		int newVs = newVsPointer->load();
+		VersionState cmpVsObj(version,VersionState::State::EMPTY);
+		int cmpVs = cmpVsObj.load();
+		VersionState newVsObj(version,VersionState::State::BUSY);
+		int newVs = newVsObj.load();
 		if (getBucketValue(hashIndex, i)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
 			break;
 		}
@@ -57,8 +57,8 @@ bool NBHashTable::insert(NBType k) {
 		}
 		if (!r) {
 			conditionallyLowerBound(hashIndex, i);
-			VersionState *emptyVs = new VersionState(version + 1,VersionState::State::EMPTY);
-			getBucketValue(hashIndex, i)->vs = emptyVs;
+			VersionState emptyVs(version + 1,VersionState::State::EMPTY);
+			getBucketValue(hashIndex, i)->vs->store(emptyVs);
 			return false;
 		}
 		version++;
@@ -105,14 +105,15 @@ bool NBHashTable::remove(NBType n) {
 		VersionState::State state = VersionState::getState(vs);
 
 		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
-			VersionState *cmpVsPointer = new VersionState(version,VersionState::State::MEMBER);
-			int cmpVs = cmpVsPointer->load();
-			VersionState *newVsPointer = new VersionState(version,VersionState::State::BUSY);
-			int newVs = newVsPointer->load();
+			VersionState cmpVsObj(version,VersionState::State::MEMBER);
+			int cmpVs = cmpVsObj.load();
+			VersionState newVsObj(version,VersionState::State::BUSY);
+			int newVs = newVsObj.load();
 
 			if (getBucketValue(hashIndex, jumps)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
 				conditionallyLowerBound(hashIndex, jumps);
-				VersionState *newVs = new VersionState(version + 1,VersionState::State::EMPTY);
+				VersionState newVs(version + 1,VersionState::State::EMPTY);
+				getBucketValue(hashIndex, jumps)->vs->store(newVs);
 				return true;
 			}
 		}
@@ -215,26 +216,26 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 	int bound = ProbeBound::getBound(pb);
 	bool scanning = ProbeBound::isScanning(pb);
 	if (scanning) {
-		ProbeBound *newPbPointer = new ProbeBound(false,bound);
-		int newPb = newPbPointer->load();
+		ProbeBound newPbObj(false,bound);
+		int newPb = newPbObj.load();
 		bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed);
 	}
 	if (probeJumps > 0) {
 
-		ProbeBound *cmpPbPointer = new ProbeBound(false,probeJumps);
-		ProbeBound *newPbPointer = new ProbeBound(true,probeJumps);
-		int cmpPb = cmpPbPointer->load();
-		int newPb = newPbPointer->load();
+		ProbeBound cmpPbObj(false,probeJumps);
+		ProbeBound newPbObj(true,probeJumps);
+		int cmpPb = cmpPbObj.load();
+		int newPb = newPbObj.load();
 		while (bounds[startIndex].compare_exchange_strong(cmpPb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
 			int i = probeJumps - 1;
 			while (i > 0 && !doesBucketContainCollision(startIndex,probeJumps)) {
 				i--;
 			}
 
-			ProbeBound *cmpPbPointer2 = new ProbeBound(true,probeJumps);
-			ProbeBound *newPbPointer2 = new ProbeBound(false,i);
-			int cmpPb2 = cmpPbPointer->load();
-			int newPb2 = newPbPointer->load();
+			ProbeBound cmpPbObj2(true,probeJumps);
+			ProbeBound newPbObj2(false,i);
+			int cmpPb2 = cmpPbObj2.load();
+			int newPb2 = newPbObj2.load();
 			bounds[startIndex].compare_exchange_strong(cmpPb2, newPb2, std::memory_order_release, std::memory_order_relaxed);
 		}
 	}
