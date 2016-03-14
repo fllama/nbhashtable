@@ -14,7 +14,6 @@ NBHashTable::NBHashTable(int ks) {
 		buckets[i].vs = new VersionState(0,VersionState::State::EMPTY);
 		buckets[i].key = EMPTY_FLAG;
 	}
-	
 }
 
 NBHashTable::~NBHashTable() {
@@ -22,24 +21,51 @@ NBHashTable::~NBHashTable() {
 	delete buckets;
 }
 
-bool NBHashTable::insert(NBType n) {
-	/*
-	mainMutex.lock();
-	if (DEBUG) printf("Inserting: %d\n", n);
-	int hashValue = hash(n);
-	for (int probeJumps = 0; probeJumps <= kSize; probeJumps++) {
-		BucketT *bucketValue = getBucketValue(hashValue, probeJumps);
-		if (bucketValue->key == EMPTY_FLAG) {
-			bucketValue->key = n;
-			conditionallyRaiseBound(hashValue, probeJumps);
-			if(DEBUG) printHashTableInfo();
-			mainMutex.unlock();
-			return true;
+bool NBHashTable::insert(NBType k) {
+	int hashIndex = hash(k);
+	int i = -1;
+
+	int version;
+	VersionState::State state;
+
+	while (true) {
+		if (++i >= kSize) {
+			return false;
+		}
+		int vs = getBucketValue(hashIndex, i)->vs->load();
+		version = VersionState::getVersion(vs);
+		state = VersionState::getState(vs);
+
+		VersionState *cmpVsPointer = new VersionState(version,VersionState::State::EMPTY);
+		int cmpVs = cmpVsPointer->load();
+		VersionState *newVsPointer = new VersionState(version,VersionState::State::BUSY);
+		int newVs = newVsPointer->load();
+		if (getBucketValue(hashIndex, i)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
+			break;
 		}
 	}
-	mainMutex.unlock();
-	*/
-	return false;
+	getBucketValue(hashIndex, i)->key = k;
+	while (true) {
+		VersionState *visibleVs = new VersionState(version,VersionState::State::VISIBLE);
+		getBucketValue(hashIndex, i)->vs = visibleVs;
+		conditionallyRaiseBound(hashIndex, i);
+		VersionState *insertingVs = new VersionState(version,VersionState::State::INSERTING);
+		getBucketValue(hashIndex, i)->vs = insertingVs;
+		bool r = assist(k,hashIndex,i,version);
+		VersionState collidedVs(version,VersionState::State::COLLIDED);
+		if (getBucketValue(hashIndex, i)->vs->load() != collidedVs) {
+			return true;
+		}
+		if (!r) {
+			conditionallyLowerBound(hashIndex, i);
+			VersionState *emptyVs = new VersionState(version + 1,VersionState::State::EMPTY);
+			getBucketValue(hashIndex, i)->vs = emptyVs;
+			return false;
+		}
+		version++;
+
+	}
+
 
 }
 
@@ -47,16 +73,15 @@ bool NBHashTable::put(NBType n) {
 	return this->insert(n);
 }
 
-bool NBHashTable::contains(NBType n) {
-	// DONE
-	int hashIndex = hash(n);
+bool NBHashTable::contains(NBType k) {
+	int hashIndex = hash(k);
 	int max = getProbeBound(hashIndex);
 	for(int jumps = 0; jumps <= max; jumps++) {
 		int vs = getBucketValue(hashIndex, jumps)->vs->load();
 		int version = VersionState::getVersion(vs);
 		VersionState::State state = VersionState::getState(vs);
 
-		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
+		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == k) {
 			VersionState newVs(version,VersionState::State::MEMBER);
 			if (getBucketValue(hashIndex, jumps)->vs->load() == newVs.load()) {
 				return true;
@@ -73,27 +98,27 @@ int NBHashTable::size() {
 }
 
 bool NBHashTable::remove(NBType n) {
-	// int hashIndex = hash(n);
-	// int max = getProbeBound(hashIndex);
-	// for(int jumps = 0; jumps <= max; jumps++) {
-	// 	int vs = getBucketValue(hashIndex, jumps)->vs->load();
-	// 	int version = VersionState::getVersion(vs);
-	// 	VersionState::State state = VersionState::getState(vs);
+	int hashIndex = hash(n);
+	int max = getProbeBound(hashIndex);
+	for(int jumps = 0; jumps <= max; jumps++) {
+		int vs = getBucketValue(hashIndex, jumps)->vs->load();
+		int version = VersionState::getVersion(vs);
+		VersionState::State state = VersionState::getState(vs);
 
-	// 	if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
-	// 		VersionState newVs(version,VersionState::State::MEMBER);
-	// 		ProbeBound *newPbPointer = new ProbeBound(false,newBound);
-	// 		int newPb = newPbPointer->load();
-	// 		if (bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
-	// 			return;
-	// 		}
-	// 		if (getBucketValue(hashIndex, jumps)->vs->load() == newVs.load()) {
-	// 			return true;
-	// 		}
-	// 	}
-	// }
-	// return false;
-     return false;
+		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
+			VersionState *cmpVsPointer = new VersionState(version,VersionState::State::MEMBER);
+			int cmpVs = cmpVsPointer->load();
+			VersionState *newVsPointer = new VersionState(version,VersionState::State::BUSY);
+			int newVs = newVsPointer->load();
+
+			if (getBucketValue(hashIndex, jumps)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
+				conditionallyLowerBound(hashIndex, jumps);
+				VersionState *newVs = new VersionState(version + 1,VersionState::State::EMPTY);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 
@@ -105,28 +130,35 @@ int NBHashTable::hash(NBType n) {
 
 
 void NBHashTable::printHashTableInfo() {
-	/*
+	mainMutex.lock();
+	printf("Bounds:\n");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", bounds[i]);
+		printf("%d\t", ProbeBound::getBound(bounds[i]));
 	}
-	printf("\n");
+	printf("\nKeys:\n");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", buckets[i]);
+		printf("%d\t", buckets[i].key);
+	}
+	printf("\nScanning:\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%s\t", ProbeBound::isScanning(bounds[i]) ? "Y" : "N");
+	}
+	printf("\nState:\n");
+	for (int i = 0; i < kSize; i++) {
+		printf("%s\t", VersionState::getStateString(VersionState::getState(buckets[i].vs->load())));
 	}
 	printf("\n\n");
-	*/
+	mainMutex.unlock();
 }
 
 
 // Bucket
 
 BucketT* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
-	// DONE
 	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
 }
 
 bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
-	// DONE
 	int vs = getBucketValue(startIndex, probeJumps)->vs->load();
 	int version1 = VersionState::getVersion(vs);
 	VersionState::State state1 = VersionState::getState(vs);
@@ -149,18 +181,14 @@ bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
 // Bounds
 
 void NBHashTable::initProbeBound(int index) {
-	//DONE
-	bounds[index].setScanning(false);
-	bounds[index].setBound(0);
+	bounds[index].set(0, false);
 }
 
 int NBHashTable::getProbeBound(int startIndex) {
-	// DONE
 	return ProbeBound::getBound(bounds[startIndex].load());
 }
 
 void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
-	// DONE
 	while (true) {
 		int pb = bounds[startIndex].load();
 		int oldBound = ProbeBound::getBound(pb);
@@ -177,7 +205,6 @@ void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
 }
 
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
-	// DONE
 	int pb = bounds[startIndex].load();
 	int bound = ProbeBound::getBound(pb);
 	bool scanning = ProbeBound::isScanning(pb);
