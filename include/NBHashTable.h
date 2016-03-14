@@ -21,10 +21,10 @@ typedef int NBType;
 //typedef int VersionState;
 //typedef int ProbeBound;
 
-struct BucketT {
+typedef struct buckett {
 	VersionState *vs;
 	NBType key;
-};
+} BucketT;
 
 class NBHashTable {
 	
@@ -40,8 +40,7 @@ class NBHashTable {
 	void conditionallyRaiseBound(int startIndex, int probeJumps);
 	void conditionallyLowerBound(int startIndex, int probeJumps);
 	int hash(NBType n);
-	void printHashTableInfo();
-	bool Assist(NBType key, int h, int i, int ver_i);
+	bool assist(NBType key, int h, int i, int ver_i);
 	
 	public:
 		NBHashTable(int ks = 8);
@@ -49,9 +48,10 @@ class NBHashTable {
 		bool insert(NBType n);
 		bool put(NBType n);
 		bool remove(NBType n);
-		// bool lookup(int);
 		bool contains(int);
 		int size();
+		
+		void printHashTableInfo();
 };
 
 #endif

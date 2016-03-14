@@ -1,6 +1,6 @@
 #include "NBHashTable.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 typedef VersionState::State VSTATE;
 
@@ -9,7 +9,8 @@ NBHashTable::NBHashTable(int ks) {
 	
 	kSize = ks;
 	buckets = new BucketT[kSize];
-	for(i = 0; i < kSize; i++) initProbeBound(i);
+	bounds = new ProbeBound[kSize];
+	
 	for(i = 0; i < kSize; i++) {
 		buckets[i].vs = new VersionState(0,VersionState::State::EMPTY);
 		buckets[i].key = EMPTY_FLAG;
@@ -131,21 +132,21 @@ int NBHashTable::hash(NBType n) {
 
 void NBHashTable::printHashTableInfo() {
 	mainMutex.lock();
-	printf("Bounds:\n");
+	printf("Bounds:\t| ");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", ProbeBound::getBound(bounds[i]));
+		printf("%-8d | ", ProbeBound::getBound(bounds[i].load()));
 	}
-	printf("\nKeys:\n");
+	printf("\nKeys:\t| ");
 	for (int i = 0; i < kSize; i++) {
-		printf("%d\t", buckets[i].key);
+		printf("%-8d | ", buckets[i].key);
 	}
-	printf("\nScanning:\n");
+	printf("\nScan:\t| ");
 	for (int i = 0; i < kSize; i++) {
-		printf("%s\t", ProbeBound::isScanning(bounds[i]) ? "Y" : "N");
+		printf("%-8s | ", ProbeBound::isScanning(bounds[i].load()) ? "true" : "false");
 	}
-	printf("\nState:\n");
+	printf("\nState:\t| ");
 	for (int i = 0; i < kSize; i++) {
-		printf("%s\t", VersionState::getStateString(VersionState::getState(buckets[i].vs->load())));
+		printf("%-8s | ", VersionState::getStateString(VersionState::getState(buckets[i].vs->load())));
 	}
 	printf("\n\n");
 	mainMutex.unlock();
@@ -260,21 +261,18 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 			if(j < i) {
 				
 				VersionState vsj_ins(ver_j, VSTATE::INSERTING);
-				if (getBucketValue(h, j)->vs->load() == vs_inserting.load()) {
-					
-					VersionState vsi_ins(ver_i, VSTATE::INSERTING);
-					VersionState vsi_col(ver_i, VSTATE::COLLIDED);
-					getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, vsi_col, std::memory_order_release, std::memory_order_relaxed);
-					return assist(k,h,j,ver_j);
+				if (getBucketValue(h, j)->vs->load() == vsj_ins.load()) {
+					int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
+					getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
+					return assist(key,h,j,ver_j);
 				}
 				
 			} else {
 				
 				VersionState vsi_ins(ver_i, VSTATE::INSERTING);
 				if(getBucketValue(h, i)->vs->load() == vsi_ins.load()) {
-					VersionState vsj_ins(ver_j, VSTATE::INSERTING);
-					VersionState vsj_col(ver_j, VSTATE::COLLIDED);
-					getBucketValue(h,j)->vs->compare_exchange_strong(vsj_ins, vsj_col, std::memory_order_release, std::memory_order_relaxed);
+					int vsj_ins = VersionState::getRawVS(ver_j, VSTATE::INSERTING);
+					getBucketValue(h,j)->vs->compare_exchange_strong(vsj_ins, VersionState::getRawVS(ver_j, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
 				}
 			}
 		}
@@ -288,18 +286,16 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 		if(state_j == VSTATE::MEMBER && getBucketValue(h, j)->key == key) {
 			VersionState vsj_mem(ver_j, VSTATE::MEMBER);
 			if(getBucketValue(h, j)->vs->load() == vsj_mem.load()) {
-				
-				VersionState vsi_ins(ver_i, VSTATE::INSERTING);
-				VersionState vsi_col(ver_i, VSTATE::COLLIDED);
-				getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, vsi_col, std::memory_order_release, std::memory_order_relaxed);
+				int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
+				getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
 				return false;
 			}
 		}
 	}
 	
 	// If we're here, that means we finally arrived at the index to insert at
-	VersionState vsi_ins(ver_i, VSTATE::INSERTING);
-	VersionState vsi_mem(ver_i, VSTATE::MEMBER);
-	getBucketValue(h,i)->vs->compare_exchange_strong(vsi_ins, vsi_mem, std::memory_order_release, std::memory_order_relaxed);
+	// Now, we can finally mark it as a member!
+	int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
+	getBucketValue(h,i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::MEMBER), std::memory_order_release, std::memory_order_relaxed);
 	return true;
 }

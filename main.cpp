@@ -6,6 +6,8 @@
 // Finally, include our hash table
 #include "NBHashTable.h"
 
+printf("Let's find the fault!\n");
+
 using namespace std;
 
 void generator(NBHashTable *ht, int tid);

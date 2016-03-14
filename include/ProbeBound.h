@@ -12,7 +12,7 @@ class ProbeBound : public std::atomic_int {
 	
 	
 	public:
-		ProbeBound(int pb, bool scanning = false);
+		ProbeBound(int pb = 0, bool scanning = false);
 		void set(int pb, bool scanning);
 		
 		// Getters must input using raw data from myProbeBound.load();

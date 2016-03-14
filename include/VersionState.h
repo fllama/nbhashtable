@@ -22,15 +22,13 @@ class VersionState : public std::atomic_int {
 			VISIBLE
 		};
 	
-	private:
 		static bool getBit(int, int);
 		static int setBit(int, bool, int);
-		int makeRaw(int version, VersionState::State state);
-	
-	public:
+		
 		// Constructor / setters
 		VersionState(int version, VersionState::State state);
 		void set(int version, VersionState::State state);
+		static int getRawVS(int version, VersionState::State state);
 		
 		// Getters
 		static VersionState::State getState(int raw);

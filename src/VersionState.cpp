@@ -6,7 +6,7 @@ VersionState::VersionState(int version, VersionState::State state) {
 }
 
 void VersionState::set(int version, VersionState::State state) {
-	this->store(makeRaw(version, state));
+	this->store(getRawVS(version, state));
 }
 
 VersionState::State VersionState::getState(int raw) {
@@ -24,7 +24,7 @@ int VersionState::getVersion(int raw) {
 }
 	
 // Private helper functions below
-int VersionState::makeRaw(int version, VersionState::State state) {
+int VersionState::getRawVS(int version, VersionState::State state) {
 	version = version << NUM_STATE_BITS;
 	
 	// Make the least-sig bits of version reflect the state
@@ -46,18 +46,18 @@ int VersionState::setBit(int num, bool value, int position) {
 const char *VersionState::getStateString(VersionState::State state) {	
 	switch(state) {
 		case VersionState::State::BUSY:
-			return "\"busy\"";
+			return "busy";
 		case VersionState::State::MEMBER:
-			return "\"member\"";
+			return "member";
 		case VersionState::State::INSERTING:
-			return "\"inserting\"";
+			return "inserting";
 		case VersionState::State::EMPTY:
-			return "\"empty\"";
+			return "empty";
 		case VersionState::State::COLLIDED:
-			return "\"collided\"";
+			return "collided";
 		case VersionState::State::VISIBLE:
-			return "\"visible\"";
+			return "visible";
 		default:
-			return "\"unknown\"";
+			return "unknown";
 	}
 }
