@@ -46,22 +46,21 @@ bool NBHashTable::put(NBType n) {
 }
 
 bool NBHashTable::contains(NBType n) {
-	/*
-	mainMutex.lock();
-	// Get the hash value for n
-	int hashIndex = hash(n), jumps;
-	
-	// check to see if this value is equal
-	for(jumps = 0; jumps <= getProbeBound(hashIndex) && jumps < kSize; jumps++) {
-		if(*getBucketValue(hashIndex, jumps) == n) {
-			mainMutex.unlock();
-			return true;
+	// DONE
+	int hashIndex = hash(n);
+	int max = getProbeBound(hashIndex);
+	for(int jumps = 0; jumps <= max; jumps++) {
+		int vs = getBucketValue(hashIndex, jumps)->vs->load();
+		int version = VersionState::getVersion(vs);
+		VersionState::State state = VersionState::getState(vs);
+
+		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
+			VersionState newVs(version,VersionState::State::MEMBER);
+			if (getBucketValue(hashIndex, jumps)->vs->load() == newVs.load()) {
+				return true;
+			}
 		}
 	}
-	
-	// If we're here, either we checked too many times or we exceeded our probe bound range
-	mainMutex.unlock();
-	*/
 	return false;
 }
 
@@ -72,30 +71,27 @@ int NBHashTable::size() {
 }
 
 bool NBHashTable::remove(NBType n) {
-	/*
-	//Get the passed values hash index and probe bound
-    int hashIndex = hash(n);
-    int probeBound = getProbeBound(n);
-    
-    //Loop through all the probe jumps
-    for(int probeJumps; probeJumps < probeBound; probeJumps++){
-        
-        //Gets the version state for the bucket of the current iteration
-        VersionState currentVersionState = getBucketValue(hashIndex, probeJumps);
-        
-        //Checks to make sure that the key matches and that the bucket is an actual member
-        if(getState(currentVersionState) == MEMBER && getBucketValue(hashIndex, probeJumps)->key == n){
-            if(atomic_compare_exchange_strong(getBucketValue(hashIndex, probeJumps)->vs,
-            setVersionState(currentVersionState.version, MEMBER),
-            setVersionState(currentVersionState.version, BUSY))){
-                conditionallyLowerBound(hashIndex, probeJumps);
-                getBucketValue(hashIndex, probeJumps)->vs = setVersion(currentVersionState.version, EMPTY);
-                return true;
-            }
-        }
-    }
-    */
-    return false;
+	// int hashIndex = hash(n);
+	// int max = getProbeBound(hashIndex);
+	// for(int jumps = 0; jumps <= max; jumps++) {
+	// 	int vs = getBucketValue(hashIndex, jumps)->vs->load();
+	// 	int version = VersionState::getVersion(vs);
+	// 	VersionState::State state = VersionState::getState(vs);
+
+	// 	if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
+	// 		VersionState newVs(version,VersionState::State::MEMBER);
+	// 		ProbeBound *newPbPointer = new ProbeBound(false,newBound);
+	// 		int newPb = newPbPointer->load();
+	// 		if (bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
+	// 			return;
+	// 		}
+	// 		if (getBucketValue(hashIndex, jumps)->vs->load() == newVs.load()) {
+	// 			return true;
+	// 		}
+	// 	}
+	// }
+	// return false;
+     return false;
 }
 
 
@@ -123,17 +119,28 @@ void NBHashTable::printHashTableInfo() {
 // Bucket
 
 BucketT* NBHashTable::getBucketValue(int startIndex, int probeJumps) {
-	/*
+	// DONE
 	return &buckets[(startIndex + (probeJumps * (probeJumps + 1)) /2) % kSize];
-	*/
-	return NULL; // Placeholder - remove
 }
 
 bool NBHashTable::doesBucketContainCollision(int startIndex, int probeJumps) {
-	/*
-	return (*getBucketValue(startIndex,probeJumps) != EMPTY_FLAG && hash(*getBucketValue(startIndex,probeJumps)) == startIndex);
-	*/
-	return false; // Placeholder - remove
+	// DONE
+	int vs = getBucketValue(startIndex, probeJumps)->vs->load();
+	int version1 = VersionState::getVersion(vs);
+	VersionState::State state1 = VersionState::getState(vs);
+	if (state1 == VersionState::State::VISIBLE || state1 == VersionState::State::INSERTING || state1 == VersionState::State::MEMBER) {
+		if (hash(getBucketValue(startIndex, probeJumps)->key) == startIndex) {
+				int vs2 = getBucketValue(startIndex, probeJumps)->vs->load();
+				int version2 = VersionState::getVersion(vs2);
+				VersionState::State state2 = VersionState::getState(vs2);
+				if (state2 == VersionState::State::VISIBLE || state2 == VersionState::State::INSERTING || state2 == VersionState::State::MEMBER) {
+					if (version1 == version2) {
+						return true;
+					}
+				}
+		}
+	}
+	return false;
 }
 
 
