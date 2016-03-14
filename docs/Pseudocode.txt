@@ -136,31 +136,32 @@ bool Insert(Key k): {
 private:
 	
 // Attempt to insert k at i
-bool Assist(Key k,int h,int i,int ver i): {
+bool Assist(Key k,int h,int i,int ver_i): {
 	// Return true if no other cell seen in member state
 	max := GetProbeBound(h) // Scan through probe sequence 
 	for j:=0..max {
-		if i ̸= j {
-			⟨ver j,state j⟩ := Bucket(h,j)→vs
+		if i != j {
+			⟨ver_j,state j⟩ := Bucket(h,j)→vs
 			if state j = inserting ∧ Bucket(h,j)→key = k {
 				if j < i {
 					// Assist any insert found earlier in the probe sequence 
-					if Bucket(h,j)→vs = ⟨ver j,inserting⟩ {
-						CAS(&Bucket(h,i)→vs, ⟨ver i,inserting⟩, ⟨ver i,collided⟩)
-						return Assist(k,h,j,ver j)
-					} else {
-						// Fail any insert found later in the probe sequence
-						if Bucket(h,i)→vs = ⟨ver i,inserting⟩ {
-							CAS(&Bucket(h,j)→vs, ⟨ver j,inserting⟩, ⟨ver j,collided⟩)
-						}
+					if Bucket(h,j)→vs = ⟨ver_j,inserting⟩ {
+						CAS(&Bucket(h,i)→vs, ⟨ver_i,inserting⟩, ⟨ver_i,collided⟩)
+						return Assist(k,h,j,ver_j)
+					} 
+				} else {
+					
+					// Fail any insert found later in the probe sequence
+					if Bucket(h,i)→vs = ⟨ver_i,inserting⟩ {
+						CAS(&Bucket(h,j)→vs, ⟨ver_j,inserting⟩, ⟨ver_j,collided⟩)
 					}
-				}			
+				}	
 			}
 			
-			⟨ver j,state j⟩ := Bucket(h,j)→vs // Abort if k already a member 
+			⟨ver_j,state j⟩ := Bucket(h,j)→vs // Abort if k already a member 
 			if state j = member ∧ Bucket(h,j)→key = k {
-				if Bucket(h,j)→vs = ⟨ver j,member⟩ {
-					CAS(&Bucket(h,i)→vs,⟨ver i,inserting⟩,⟨ver i,collided⟩) 
+				if Bucket(h,j)→vs = ⟨ver_j,member⟩ {
+					CAS(&Bucket(h,i)→vs,⟨ver_i,inserting⟩,⟨ver_i,collided⟩) 
 					return false
 				}
 			}
@@ -168,7 +169,7 @@ bool Assist(Key k,int h,int i,int ver i): {
 		}
 	}
 	
-	CAS(&Bucket(h,i), ⟨ver i,inserting⟩, ⟨ver i,member⟩)
+	CAS(&Bucket(h,i), ⟨ver_i,inserting⟩, ⟨ver_i,member⟩)
 	return true
 }
 

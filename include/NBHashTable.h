@@ -41,7 +41,7 @@ class NBHashTable {
 	void conditionallyLowerBound(int startIndex, int probeJumps);
 	int hash(NBType n);
 	void printHashTableInfo();
-	
+	bool Assist(NBType key, int h, int i, int ver_i);
 	
 	public:
 		NBHashTable(int ks = 8);

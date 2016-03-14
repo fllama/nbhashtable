@@ -2,6 +2,8 @@
 
 #define DEBUG 0
 
+typedef VersionState::State VSTATE;
+
 NBHashTable::NBHashTable(int ks) {
 	int i;
 	
@@ -205,41 +207,72 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 	}
 }
 
-/*
-
-VersionState and ProbeBound types
-
-*/
-
-
-
-// int NBHashTable::getState(VersionState vs) {
-// 	int msb = sizeof(VersionState)*8 - 1;
-// 	int stateID = 0;
+// Try to insert key at index i
+// key is the value we're trying to insert
+// h is the hash key, or the initial index
+// i is the number of jumps away from h we are, so i = 0 on first run
+// ver_i is the version at bucket[h,i]
+bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
+	int max = getProbeBound(h);
 	
-// 	// Start from our max bit size and count down
-// 	for(int bit = 0; bit < NUM_STATE_BITS; bit++) {
-// 		int pow2val = 1 << (NUM_STATE_BITS - bit);
-// 		stateID += pow2val*getBitValue(vs, msb-bit);
-// 	}
+	// Look through all the possible number of jumps
+	for(int j = 0; j < max; j++) {
+		
+		// If we're looking at the same index, skip it
+		if(i==j) continue;
+			
+		// Line 91, Fig. 10 -> Get the version/state atomically
+		int rawVS = getBucketValue(h, j)->vs->load();
+		int ver_j = VersionState::getVersion(rawVS);
+		VSTATE state_j = VersionState::getState(rawVS);
+		
+		// If this state is inserting, and it has the same key we're trying to insert
+		if(state_j == VSTATE::INSERTING && getBucketValue(h, j)->key == key) {
+			
+			// If it was found earlier in the probe sequence
+			if(j < i) {
+				
+				VersionState vsj_ins(ver_j, VSTATE::INSERTING);
+				if (getBucketValue(h, j)->vs->load() == vs_inserting.load()) {
+					
+					VersionState vsi_ins(ver_i, VSTATE::INSERTING);
+					VersionState vsi_col(ver_i, VSTATE::COLLIDED);
+					getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, vsi_col, std::memory_order_release, std::memory_order_relaxed);
+					return assist(k,h,j,ver_j);
+				}
+				
+			} else {
+				
+				VersionState vsi_ins(ver_i, VSTATE::INSERTING);
+				if(getBucketValue(h, i)->vs->load() == vsi_ins.load()) {
+					VersionState vsj_ins(ver_j, VSTATE::INSERTING);
+					VersionState vsj_col(ver_j, VSTATE::COLLIDED);
+					getBucketValue(h,j)->vs->compare_exchange_strong(vsj_ins, vsj_col, std::memory_order_release, std::memory_order_relaxed);
+				}
+			}
+		}
+		
+		// Grab our VersionState again
+		rawVS = getBucketValue(h,j)->vs->load();
+		ver_j = VersionState::getVersion(rawVS);
+		state_j = VersionState::getState(rawVS);
+		
+		// If we find our value already is a member then exit immediately
+		if(state_j == VSTATE::MEMBER && getBucketValue(h, j)->key == key) {
+			VersionState vsj_mem(ver_j, VSTATE::MEMBER);
+			if(getBucketValue(h, j)->vs->load() == vsj_mem.load()) {
+				
+				VersionState vsi_ins(ver_i, VSTATE::INSERTING);
+				VersionState vsi_col(ver_i, VSTATE::COLLIDED);
+				getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, vsi_col, std::memory_order_release, std::memory_order_relaxed);
+				return false;
+			}
+		}
+	}
 	
-// 	return stateID;
-// }
-
-// int NBHashTable::getVersion(VersionState vs);
-// int NBHashTable::getBound(ProbeBound pb);
-// bool NBHashTable::getScanning(ProbeBound pb);
-// VersionState NBHashTable::setState(VersionState vs, int s);
-// VersionState NBHashTable::setVersion(VersionState vs, int v);
-// std::atomic<VersionState> NBHashTable::setVersionState(int v, int s) {
-// 	return NULL; //Placeholder - remove
-// }
-// ProbeBound NBHashTable::setScanning(ProbeBound pb, bool s);
-// ProbeBound NBHashTable::setProbeBound(ProbeBound pb, int p);
-// ProbeBound NBHashTable::setProbeBound(int p, bool s);
-
-// // "bit" must be from 0 to n-1 for an N-bit integer
-// int NBHashTable::getBitValue(int num, int bit) {
-// 	return num & (1 << bit);
-// }
-
+	// If we're here, that means we finally arrived at the index to insert at
+	VersionState vsi_ins(ver_i, VSTATE::INSERTING);
+	VersionState vsi_mem(ver_i, VSTATE::MEMBER);
+	getBucketValue(h,i)->vs->compare_exchange_strong(vsi_ins, vsi_mem, std::memory_order_release, std::memory_order_relaxed);
+	return true;
+}
