@@ -19,8 +19,21 @@ int main() {
 	b.set(ProbeBound::getBound(raw)*20, !ProbeBound::isScanning(raw));
 	printBoundStuff(b); // Should be "200, true"
 	
-	b.set(-100, false);
-	printBoundStuff(b); // Should be "0, false"
+	b.set(-100, true);
+	printBoundStuff(b); // Should be "0, true"
+	
+	
+	ProbeBound newBound(20, false);
+	ProbeBound checkBound(0, true);
+	printf("Trying a compare and swap...\nNew PB: ");
+	printBoundStuff(newBound);
+	printf("Current PB: ");
+	printBoundStuff(checkBound);
+	int checkraw = checkBound.load();
+	b.compare_exchange_strong(checkraw, newBound.load());
+	printf("If the CAS worked, this should be equal to new probe bound...\n");
+	printBoundStuff(b); // Should be equal to newBound's info
+	
 	
 	printf("-----------------------------\n");
 	

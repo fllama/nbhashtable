@@ -94,7 +94,6 @@ void fetcher(int tid, atomic_int *c, NBHashTable *ht, Instruction *arr, int numI
 				printLock.lock();
 				boolBuffer = ht->contains(arr[thisIndex].value);
 				printf("Thread %d: Checking for %d --- %s\n", tid, arr[thisIndex].value, boolBuffer ? "true" : "false");
-				ht->printHashTableInfo();
 				printLock.unlock();
 				break;
 			case Instruction::Type::DELETE:

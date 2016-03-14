@@ -1,6 +1,6 @@
 #include "NBHashTable.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 typedef VersionState::State VSTATE;
 
@@ -47,14 +47,12 @@ bool NBHashTable::insert(NBType k) {
 	}
 	getBucketValue(hashIndex, i)->key = k;
 	while (true) {
-		VersionState *visibleVs = new VersionState(version,VersionState::State::VISIBLE);
-		getBucketValue(hashIndex, i)->vs = visibleVs;
+		getBucketValue(hashIndex, i)->vs->set(version, VersionState::State::VISIBLE);
 		conditionallyRaiseBound(hashIndex, i);
-		VersionState *insertingVs = new VersionState(version,VersionState::State::INSERTING);
-		getBucketValue(hashIndex, i)->vs = insertingVs;
+		getBucketValue(hashIndex, i)->vs->set(version,VersionState::State::INSERTING);
 		bool r = assist(k,hashIndex,i,version);
 		VersionState collidedVs(version,VersionState::State::COLLIDED);
-		if (getBucketValue(hashIndex, i)->vs->load() != collidedVs) {
+		if (getBucketValue(hashIndex, i)->vs->load() != collidedVs.load()) {
 			return true;
 		}
 		if (!r) {
@@ -138,7 +136,8 @@ void NBHashTable::printHashTableInfo() {
 	}
 	printf("\nKeys:\t| ");
 	for (int i = 0; i < kSize; i++) {
-		printf("%-8d | ", buckets[i].key);
+		if(buckets[i].key == EMPTY_FLAG) printf("%-8s | ", "-");
+		else printf("%-8d | ", buckets[i].key);
 	}
 	printf("\nScan:\t| ");
 	for (int i = 0; i < kSize; i++) {
@@ -190,19 +189,25 @@ int NBHashTable::getProbeBound(int startIndex) {
 }
 
 void NBHashTable::conditionallyRaiseBound(int startIndex, int probeJumps) {
+	
+	if(DEBUG) {
+		mainMutex.lock();
+		printf("Conditionally raising bound for bucket[%d], there were %d jumps\n", startIndex, probeJumps);
+		mainMutex.unlock();
+	}
+	
 	while (true) {
 		int pb = bounds[startIndex].load();
 		int oldBound = ProbeBound::getBound(pb);
 		bool scanning = ProbeBound::isScanning(pb);
 
 		int newBound = std::max(oldBound, probeJumps);
-		ProbeBound *newPbPointer = new ProbeBound(false,newBound);
-		int newPb = newPbPointer->load();
-		if (bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
+		ProbeBound newPb(newBound, false);
+		
+		if (bounds[startIndex].compare_exchange_strong(pb, newPb.load())) {
 			return;
 		}
 	}
-
 }
 
 void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
