@@ -1,0 +1,29 @@
+QUESTIONS:
+
+*- What is the progress guarantee that your data structure provides? Include an
+informal proof of why the data structure meets the specified progress guarantee.
+
+*- What is the correctness condition that your data structure provides? Include an
+informal proof of why the data structure meets the specified correctness condition.
+
+*- What are the key synchronization techniques that allow this design to meet the
+described correctness and progress guarantees?
+
+- What did you have to change from the design described in the research paper in
+your implementation of the algorithm?- What are the advantages and disadvantages of this data structure compared to its
+alternatives? Are there any specific use cases where this design would be more
+beneficial than the-state-of-the-art alternative container?
+
+- Can you think of ways to improve the design of the data structure? If so, please
+attempt them and compare your design and the original re-implementation of the
+algorithm. (Bonus points).
+
+- What are the biggest obstacles you encountered in your implementation?
+
+ANSWERS:
+
+The structure uses bit stealing in order to implement the mechanisms used for the progress guarantee and the correctness condition. Bit stealing is used in two instances. In the first instance it is used in order to steal three bits from the version number in order to store the current state of the bucket is in. The states include: busy, member, inserting, empty, collided, and visible. When in the busy state, the bucket is currently being acted on by the insert or remove operation but its effects are not observable in any way. When in the member state, the bucket's data is both valid and not currently being acted on by any operation. When in the inserting state, the bucket's key is valid but the collisions with the bucket may have not been resolved yet. When in the empty state, the bucket is not being acted upon by any operation but the bucket's key is not valid. When in the collided state, the bucket has... When in the visible state, the bucket's key value is valid but its probe bound are not currently valid. In the second instance a single bit is stolen from the probe bound in order to store the scanning state for the particular bucket.
+
+This bit stealing becomes useful when the compare and swap operations are used to synchronize operations across threads because it allows the program to compare multiple values atomically and ensure that another thread doesn't act on the data before another thread is able to complete its current operation. By ensuring that the threads are able to achieve complex state based synchronization, correctness is ensured. In this particular implementation the insert and remove operations both use the compare and swap operation in order to ensure that the version of the current bucket is unchanged and that the state of the of the bucket is what is expected before changing the state of the bucket to the next one within the given process the bucket is involved in. The bit stealing is also used by the conditionally lower bound operation in order to set the scanning bit at the same time as the probe bound in order to be sure that another lower bound operation does not conflict with the same bucket. 
+
+Through the use of these bit stealing operations in conjunction with the compare and swap operation, a lock free progress guarantee is achieved. In the event of failed compare and swap operations the operation is reattempted until the compare and swap succeeds. If a particular operation is interrupted it is because another operation succeeded, therefore at least one thread was able to complete its operation.
