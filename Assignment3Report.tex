@@ -146,7 +146,6 @@ ProbeBound and VersionState values are read atomically and without locking. The 
 
 \subsection{Lock-Freedom}
 
-
 \section{Testing and Performance}
 
 To compare our algorithm to the original description, we set up several testing suites that implemented our NBHashTable class. In the previous assignment, we focused on both correctness, and execution time. This time around, as we have added some additional structures to support non-sequential loads, we required several new tests in addition to the previous tests.
@@ -210,7 +209,7 @@ These methods aren't any different from our previous submission, in fact they ar
 
 \subsection{Results}
 
-The overall results of each of our execution time trials can be shown in a single graph, listed below. We've included this graph as it was asked for in the assignment description. However, we felt that it was more useful to compare each trial with the same number of threads to each-other side-by-side. This allows us to view the results in a more meaningful manner. Each of these graphs have been included below.
+The overall results of each of our execution time trials, this time around, cannot be shown in a single graph. To visualize a basic sense of the maximum time increase over both versions, we've included the graph below to compare this version to the sequential version. For all of the following graphs, the blue results represent our previous sequential solution, while the red represents our new non-blocking version. Our analysis of these results is included in the following section.
 
 \begin{figure}[!t]
 	\centering
@@ -339,7 +338,15 @@ The overall results of each of our execution time trials can be shown in a singl
 
 \section{Execution Time Analysis}
 
-We originally speculated that a non-blocking version of this code would considerably decrease our load 
+We originally speculated that a non-blocking version of this code would considerably decrease our load, and what we found was much more interesting. 
+
+For a single thread, we can clearly see that the execution time was much larger. We think this makes sense, as we've added a lot of overhead to our new code that the old code didn't have to go through for an insertion. It appears as though trials 2 and 5 for the single threaded results were comparable to the previous results, and we feel that's because of the low number of insertion operations. That must mean for a single thread, insertions take significantly longer. That makes sense, as the work load cannot be distributed at all, and the new features have added a lot of overhead on adding an element that's reduced as the load becomes more distributed amongst more threads.
+
+The second interesting fact is that trial 1 takes significantly longer amongst all graphs. When looking at the distribution, it's clear to see that trial 1 performs a significantly high number of insertions. It's clear that this new algorithm has added some extra contention among the insertion operations.
+
+We can see that generally, with the exception of trial 1, as the number of threads decrease, the execution time marginally decreases as well. On all tests, trials two and five were significantly faster than the old version for all but the 1-threaded test, that's because our structure can perform contains and deletion operations much faster than an insertion. Now that the structure doesn't have to wait for a lock to release, it's free to perform those much faster than before.
+
+Otherwise, the results were surprisingly comparable than the previous method. When reading the paper, we were convinced we were working with black magic. That no matter what, a method this interesting had to deliver breathtakingly fast results. Though these improvements are definitely seen on trials 2 and 5 for results with multiple threads, we admit the results are not as startling as we originally thought.
 
 
 \section{Conclusion}
