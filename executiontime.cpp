@@ -8,10 +8,10 @@
 // Finally, include our hash table
 #include "NBHashTable.h"
 
-#define NUM_TRIALS 500000
-#define TABLE_SIZE 50
+#define NUM_TRIALS 500000 // 500k
+#define TABLE_SIZE 64
 #define MAX_NUM    100 // from 1 to MAX_NUM
-#define NUM_TESTS  4
+#define NUM_TESTS  1
 
 #define INSERT_CHANCE  75
 #define REMOVE_CHANCE  25

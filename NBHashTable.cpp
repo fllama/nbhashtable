@@ -91,9 +91,7 @@ bool NBHashTable::contains(NBType k) {
 }
 
 int NBHashTable::size() {
-	mainMutex.lock();
 	return kSize;
-	mainMutex.unlock();
 }
 
 bool NBHashTable::remove(NBType n) {

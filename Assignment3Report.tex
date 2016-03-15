@@ -64,6 +64,14 @@
 
 
 \usepackage{soul, color}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset { %
+    language=C++,
+    backgroundcolor=\color{black!5}, % set backgroundcolor
+    basicstyle=\footnotesize,% basic font setting
+}
 
 \begin{document}
 \title{Implementation of a Non-Blocking\\ Hashtable using C++11}
@@ -138,7 +146,7 @@ To compare our algorithm to the original description, we set up several testing 
 
 The first new test is our Atomic Types test file, "atomictypes.cpp". This program allowed us to create test cases for our ProbeBound and VersionState classes. As the paper showed, we used a bit-stealing technique to combine the probe bound and scanning bit into a single memory word, so a single compare-and-swap operation could update this value. The same process needed to be done for the Version and bucket state variables, except the bucket state required three bits as there were six possible states.
 
-The second new test file is titled "instructions.cpp", and allows us to input exact numbers we wanted inserted and deleted. This way, we can set up even more specific tests and make sure that each function was working appropriately. These are input using standard input, so files can be piped as input to the program.
+The second new test file is titled "instructions.cpp", and allows us to input exact numbers we wanted inserted and deleted. This way, we can set up even more specific tests and make sure that each function was working appropriately.
 
 
 \subsection{Correctness}
@@ -147,7 +155,13 @@ Correctness is difficult to measure for all cases. Unlike execution time, it wou
 
 Our approach to measuring the correctness of the algorithm, instead, was to create several test cases. The idea is that we can create test cases, and compare the actual result to an expected result we retrieved on paper. With this method, we can create many different tricky test cases, and see how they perform individually. From each tricky test case, we were thereby able to refine our implementation to be certain of its correctness, and kept refining different portions of code until we were certain it was correct.
 
-We have included our sample test cases in our initial submission document, under 'correctness1.cpp' and 'correctness2.cpp'. These can be built using our makefile with the target "make correctness". This will make two corresponding executables, correctness1 and correctness2 under the build/ directory. These can be run to show our testing methodology, and the proof of our algorithm can be visually seen.
+We've added a new file to verify correctness on this submission as mentioned earlier, "instructions.cpp". The goal of this new program is to read in from standard input (or a piped file) the number of threads to create, the size of our table, and a list of instructions to perform. The instructions are specific insertions, deletions, and contains operations. The program will read this file, follow it as said, and print results as it inserts them into the hash table. This way, we can create inputs with even trickier general test cases and visually see how the insertions and deletions are affecting the table.
+
+To run our correctness file, we've added a GNU make target called "instructions" to our Makefile. The built executable will be placed inside the build/ directory. Once built, input can be given to the executable through file piping. We've provided an example file, "instructions.in" and a description of the input format inside the source code file.
+
+Our other two correctness files are 'correctness1.cpp' and 'correctness2.cpp', which are left over from our last project for comparison. These two older files can be built using our GNU Makefile with the target "make correctness". This will make two corresponding executables, correctness1 and correctness2 under the build/ directory. These can be run to show our testing methodology, and the proof of our algorithm can be visually seen.
+
+
 
 \subsection{Execution time}
 
@@ -185,95 +199,50 @@ Because we want our test results to reflect an accurate average timing for norma
 
 Using this program, we were able to create a huge GNU Makefile that automated our tests, and piped the output to a testing directory. The very same Makefile is available in the included package, and can be run using the target "make executionTimeTests", as described in the README file.
 
+These methods aren't any different from our previous submission, in fact they are exactly the same. We moved the exact same files over and are using the exact same make build targets. This way, we can see the exact difference in performance of our new implementation compared to the previous sequential method.
+
 \subsection{Results}
 
-The overall results of each of our execution time trials can be shown in a single graph above. We've included this graph as it was asked for in the assignment description. However, we felt that it was more useful to compare each trial with the same number of threads to each-other side-by-side. This allows us to view the results in a more meaningful manner. Each of these graphs have been included below.
+The overall results of each of our execution time trials can be shown in a single graph, listed below. We've included this graph as it was asked for in the assignment description. However, we felt that it was more useful to compare each trial with the same number of threads to each-other side-by-side. This allows us to view the results in a more meaningful manner. Each of these graphs have been included below.
 
 \begin{figure}[!t]
 	\centering
 	
 	\begin{tikzpicture}
+	
 	\begin{axis}[
-	    title={Execution time for all six trials},
+	    title={Maximum execution time over all six trials},
 	    xlabel={Number of threads},
 	    ylabel={Execution time [seconds]},
 	    xmin=1, xmax=8,
-	    ymin=0, ymax=25,
+	    ymin=0, ymax=30,
 	    xtick={1,2,4,8},
-	    ytick={0, 5, 10, 15, 20, 25},
+	    ytick={0, 5, 10, 15, 20, 25, 30},
     	legend pos=north west,
 	    ymajorgrids=true,
 	    grid style=dashed,
 	]
 	
-	% Distribution 1
+		
+	\addplot[
+	    color=blue,
+	    mark=square,
+	    ]
+	    coordinates {
+	    (1, 0.253422)(2, 6.25)(4, 11.121)(8, 22.1)
+	    };
 	\addplot[
 	    color=red,
 	    mark=square,
 	    ]
 	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.253422)(2, 6.470939)(4, 11.397211)(8, 23.836776)
+	    (1, 2.1)(2, 6.922261)(4, 14.639601)(8, 29.296855)
 	    };
-    %\legend{Distribution 1}
-    
-    % Distribution 2
-	\addplot[
-	    color=orange,
-	    mark=square,
-	    ]
-	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.123798)(2, 6.456186)(4, 11.154437)(8, 21.758258)
-	    };
-    %\legend{Distribution 2}  
-    
-        % Distribution 3
-	\addplot[
-	    color=yellow,
-	    mark=square,
-	    ]
-	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.191336)(2, 6.357836)(4, 11.117342)(8, 22.457724)
-	    };
-    % \legend{Distribution 3}
- 
-	% Distribution 4
-	\addplot[
-	    color=green,
-	    mark=square,
-	    ]
-	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.176446)(2, 6.304448)(4, 11.154646)(8, 22.058291)
-	    };
-    % \legend{Distribution 4}
- 	
- 	\addplot[
-	    color=cyan,
-	    mark=square,
-	    ]
-	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.074183)(2, 5.929456)(4, 10.723320)(8, 21.841913)
-	    };
- 	
+	    
+	\legend{Sequential, Non-sequential}
 	
-	 \addplot[
-	    color=blue,
-	    mark=square,
-	    ]
-	    coordinates {
-	    %0.2487	6.4415
-	    (1, 0.143335)(2, 6.211829)(4, 10.902162)(8, 22.432596)
-	    };
- 	
- 	\legend{Trial 1, Trial 2, Trial 3, Trial 4, Trial 5, Trial 6}
 	\end{axis}
-	
-
-	
+		
 	\end{tikzpicture}
 	%\label{Test figure}
 \end{figure}
@@ -289,11 +258,13 @@ The overall results of each of our execution time trials can be shown in a singl
     ylabel={Execution time (seconds)},
     symbolic x coords={trial1,trial2,trial3,trial4,trial5, trial6},
     xtick=data,
-    ytick={0,0.1,0.15,0.2,0.25},
+    ytick={0,0.5,1.0,1.5,2.0,2.5,3.0},
     nodes near coords,
     nodes near coords align={vertical},
     ]
 \addplot coordinates {(trial1,0.253422) (trial2, 0.123798) (trial3,0.191336)(trial4,0.176446)(trial5,0.07)(trial6,0.143335)};
+\addplot coordinates {(trial1,3.137997) (trial2, 0.299298) (trial3,2.140433)(trial4,2.007891)(trial5,0.163410)(trial6,1.441663)};
+
 \end{axis}	
 \end{tikzpicture}
 
@@ -313,6 +284,7 @@ The overall results of each of our execution time trials can be shown in a singl
     nodes near coords align={vertical},
     ]
 \addplot coordinates {(trial1, 6.470939) (trial2, 6.456186) (trial3,6.357836)(trial4,6.304448)(trial5,5.929456)(trial6,6.211829)};
+\addplot coordinates {(trial1, 6.922261) (trial2,  0.866337) (trial3, 4.767575)(trial4, 4.375773)(trial5, 0.601312)(trial6, 3.270004)};
 \end{axis}	
 \end{tikzpicture}
 
@@ -331,6 +303,8 @@ The overall results of each of our execution time trials can be shown in a singl
     nodes near coords align={vertical},
     ]
 \addplot coordinates {(trial1, 11.397211) (trial2,  11.154437) (trial3, 11.117342)(trial4, 11.154646)(trial5, 10.723320)(trial6, 10.902162)};
+\addplot coordinates {(trial1, 14.639601) (trial2,  2.960299) (trial3, 9.934485)(trial4, 8.993448)(trial5, 2.476551)(trial6, 6.756403)};
+
 \end{axis}	
 \end{tikzpicture}
 
@@ -350,18 +324,18 @@ The overall results of each of our execution time trials can be shown in a singl
     nodes near coords align={vertical},
     ]
 \addplot coordinates {(trial1, 23.836776) (trial2,  21.758258) (trial3, 22.457724)(trial4, 22.058291)(trial5, 21.841913)(trial6, 22.432596)};
+\addplot coordinates {(trial1, 29.296855) (trial2,  6.150445) (trial3, 19.973269)(trial4, 18.112122)(trial5, 5.153033)(trial6, 13.796656)};
 \end{axis}	
 \end{tikzpicture}
 
 \hfill\\
 
-For each graph, we can see that trial 5 took considerably less time for each test with all the different thread possibilities. Consulting Table 1, we can see that thread 5 has the least insertion likelihood. A low time is also noticeable for trial 2 on the 1-thread and 8-thread graphs. Our interpretation is that insertion into our table is the most expensive operation, at least in this initial sequential implementation. Judging by the high results of trials without any contains operations, we feel this is evidence of contains() being the least expensive operation.
+\section{Execution Time Analysis}
 
-It will be interesting to see the affect of the next step in this project: implementing the non-sequential data structure. We expect the final non-blocking hashtable, as originally described, should severely decrease the execution time of our results. The nice thing about our execution C++ code is that they implement the class in a generic fashion, so that we can modify the hashtable code and test against the exact same execution time code.
+We originally speculated that a non-blocking version of this code would considerably decrease our load 
 
 
-
-\section{Analysis and Conclusion}
+\section{Conclusion}
 
 The non-blocking hashtable proposed by Chris Purcell and Tim Harris uses a number of operations and specialized data types to achieve atomicity non-blocking functionality.  To make our implementation sequential, we were able to simplify the internal structure of the hashtable by eliminating these features and only allowing one thread to modify the hashtable at a time. Though this differentiates it from the proposed implementation and is not non-blocking, it maintains the same hashtable open addressing functionality with the use of probe scanning phases. The result is a sequential version of the proposed hashtable structure.
 
