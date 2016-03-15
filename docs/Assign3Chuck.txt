@@ -10,7 +10,9 @@ informal proof of why the data structure meets the specified correctness conditi
 described correctness and progress guarantees?
 
 - What did you have to change from the design described in the research paper in
-your implementation of the algorithm?- What are the advantages and disadvantages of this data structure compared to its
+your implementation of the algorithm?
+
+- What are the advantages and disadvantages of this data structure compared to its
 alternatives? Are there any specific use cases where this design would be more
 beneficial than the-state-of-the-art alternative container?
 
@@ -27,3 +29,5 @@ The structure uses bit stealing in order to implement the mechanisms used for th
 This bit stealing becomes useful when the compare and swap operations are used to synchronize operations across threads because it allows the program to compare multiple values atomically and ensure that another thread doesn't act on the data before another thread is able to complete its current operation. By ensuring that the threads are able to achieve complex state based synchronization, correctness is ensured. In this particular implementation the insert and remove operations both use the compare and swap operation in order to ensure that the version of the current bucket is unchanged and that the state of the of the bucket is what is expected before changing the state of the bucket to the next one within the given process the bucket is involved in. The bit stealing is also used by the conditionally lower bound operation in order to set the scanning bit at the same time as the probe bound in order to be sure that another lower bound operation does not conflict with the same bucket. 
 
 Through the use of these bit stealing operations in conjunction with the compare and swap operation, a lock free progress guarantee is achieved. In the event of failed compare and swap operations the operation is reattempted until the compare and swap succeeds. If a particular operation is interrupted it is because another operation succeeded, therefore at least one thread was able to complete its operation.
+
+This hash table is able to satisfy its correctness condition and offers a lock free progress guarantee through the use of bit stealing and conditional completion of the operations based on the result of compare and swap operations. The use of the additional version-state and probe bounds data for each bucket produces significant additional memory overhead and could prove problematic for scalability in memory limited scenarios. The addition of these elements allows for reduced computation times by eliminating the need for refactoring of the hash table if a key in the middle of a collision sequence has to be removed.
