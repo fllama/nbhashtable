@@ -1,0 +1,29 @@
+void ConditionallyLowerBound(int h, int index):
+{	
+	//Gets the current state of the bound
+	<bound,scanning> := bounds[h]
+	
+	//If the scanning bit is true set it to false (Also make sure that the bound has not been changed)
+	if scanning = true
+	{	
+		CAS(&bounds[h],<bound,true>,<bound,false>)
+	}
+
+	//Only updates the index if its non zero (You can't lower something below zero, duh)
+	if index > 0
+	{
+		//Keeps trying to update the index while it remains unchanged and its not scanning
+		while CAS(&bounds[h],<index,false>,<index,true>)
+		{	
+			//Initialize i to one less than the passed index	
+			i := index-1
+			
+			//Continue to decrement the index until another collision is found
+			while i > 0 ∧ ¬DoesBucketContainCollision(h, i)			
+				i--
+
+			//As long as the scanning bit is set to true and the index is unchanged, update the index and set scanning to false
+			CAS(&bounds[h],<index,true>,<i,false>)
+		}
+	}
+}
