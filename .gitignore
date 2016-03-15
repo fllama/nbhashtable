@@ -4,6 +4,8 @@ test/
 .DS_Store
 Report.pdf
 .texpadtmp
+tests/atomict
+tests/instructions
 
 # Compiled Object files
 *.slo
