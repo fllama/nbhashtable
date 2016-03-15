@@ -77,18 +77,18 @@
 \maketitle
 
 \begin{abstract}
-In the paper “Non-blocking Hashtables with Open Addressing”, Chris Purcell and Tim Harris propose a non-blocking hashtable that utilizes buckets, probe bounds, and open addressing for standard hashtable functionality and achieves non-blocking behavior with the use of atomic operations and custom word types. We implemented a sequential version of the proposed hashtable in a C++11 class that shares the core hashtable implementation but eliminates much of what makes it parallel. Our implementation was tested over a series of trials and resulted in a degradation of performance if the number of insertions and deletions were significantly higher than the number of search operations.
+In the paper “Non-blocking Hashtables with Open Addressing”, Chris Purcell and Tim Harris propose a non-blocking hashtable that utilizes buckets, probe bounds, and open addressing for standard hashtable functionality and achieves non-blocking behavior with the use of atomic lock-free operations, custom word types, and additional states. We implemented the proposed hastable model as a C++11 class utilizing C++11 features and libraries. We maintained lock-freedom with the use of the C++11 atomic library to implement hastable operations that can be performed concurrently. Our implementation was tested over a series of trials and resulted in slower performance compared to our sequential implementation. 
 \end{abstract}
 
 \section{Introduction}
 \IEEEPARstart{I}{n} this paper we will describe a  sequential version of a non-blocking hashtable described by Chris Purcell and Tim Harris in their paper “Non-blocking Hashtables with Open Addressing”. We implemented the data structure a a C++11 class and performed a series of tests to assess its performance.
-To describe our implementation and test results, we will first in Section 1 briefly describe the hashtable proposed in the original paper. Section 2 will describe the details of our C++11 sequential implementation of the hashtable. Lastly, we will describe our performance tests and analyze the results to give an overall view of the efficiency of a sequential version of the described hashtable.
+We will first in Section 1 describe the hashtable proposed in the original paper. Section 2 will describe the details of our C++11 implementation. Lastly, we will describe our performance tests and analyze the results to give an overall view of the efficiency of the concurrent version of the described hashtable and compare our results to our previous sequential version.
 
 
  
 \section{Algorithm Description}
 
-The Non-Blocking implementation of our Hashtable contains three operations: Insert, Delete, and Contains. The function of these operations is described below, as well as a description of the necessary changes for a Non-Blocking implementation.
+The non-blocking implementation of our hashtable contains three operations: Insert, Delete, and Contains. The function of these operations is described below, as well as a description of the necessary changes for a Non-Blocking implementation.
 
 	The non-blocking hashtable utilizes open addressing to resolve conflicts. Each bucket has a bound number that is used as an upper bound on how many buckets that need to be searched during a probing sequence when looking for a key to remove, add, or find. The hashtable described implements this in a non-blocking fashion so any number of threads can be inserting or deleting with progress and accuracy guaranteed.
 Keeping the bound values correct can be difficult in a concurrent environment. A thread that adds or removes a value attempts to raise or lower the bounds value at the hashed index collision position. At any time during this process, the thread can be paused by the scheduler while another 2nd thread could also add or remove a value. If that 2nd thread finishes, and the original thread resumes, the bound value it sets could now be incorrect. 
@@ -370,7 +370,7 @@ It will be interesting to see the affect of the next step in this project: imple
 
 \section{Analysis and Conclusion}
 
-The non-blocking hashtable proposed by Chris Purcell and Tim Harris uses a number of operations and specialized data types to achieve atomicity non-blocking functionality.  To make our implementation sequential, we were able to simplify the internal structure of the hashtable by eliminating these features and only allowing one thread to modify the hashtable at a time. Though this differentiates it from the proposed implementation and is not non-blocking, it maintains the same hashtable open addressing functionality with the use of probe scanning phases. The result is a sequential version of the proposed hashtable structure.
+The non-blocking hashtable proposed by Chris Purcell and Tim Harris uses a number of atomic operations, lock-free operations, and specialized data types to achieve non-blocking functionality.  Our implementation followed the provided algorithms precisely with slight modifications for the use of C++11. 
 
 
 \ifCLASSOPTIONcaptionsoff
