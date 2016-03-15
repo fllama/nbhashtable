@@ -7,7 +7,6 @@ Report.pdf
 .texpadtmp
 tests/atomict
 tests/instructions
-docs/
 
 # TeX files
 *.aux
