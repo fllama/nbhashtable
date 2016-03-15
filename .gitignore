@@ -1,11 +1,19 @@
 build/
 test/
+results/
 .placeholder
 .DS_Store
 Report.pdf
 .texpadtmp
 tests/atomict
 tests/instructions
+docs/
+
+# TeX files
+*.aux
+*.log
+*.pdf
+*.synctex.gz
 
 # Compiled Object files
 *.slo
