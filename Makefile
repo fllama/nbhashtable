@@ -2,8 +2,13 @@ all: tests
 
 BUILD_DIR=build
 TEST_RESULT_DIR=results
-CFLAGS= -std=c++11 -pthread
-MAIN_FILE=executiontime.cpp
+SRC_DIR=src
+INCL_DIR=include
+TEST_DIR=tests
+
+CC = g++
+CFLAGS= -std=c++11 -pthread -I $(INCL_DIR)
+
 
 tests: correctness executionTime atomictypes instruction
 
@@ -15,37 +20,33 @@ results/.placeholder:
 	mkdir -vp $(TEST_RESULT_DIR)
 	touch $(TEST_RESULT_DIR)/.placeholder
 
-#default: build/.placeholder
-#	g++ $(CFLAGS) -o $(BUILD_DIR)/nbhashtable $(MAIN_FILE) NBHashTable.cpp
-#	@echo Build complete. Placed executable into $(BUILD_DIR)/ directory.
-
 #
 # Atomic test
 #
 atomictypes: build/.placeholder
-	g++ $(CFLAGS) -o $(BUILD_DIR)/atomict atomictypes.cpp NBHashTable.cpp VersionState.cpp ProbeBound.cpp
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/atomict $(TEST_DIR)/atomictypes.cpp $(SRC_DIR)/NBHashTable.cpp $(SRC_DIR)/VersionState.cpp $(SRC_DIR)/ProbeBound.cpp
 	@echo ProbeBound and VersionState binary "atomict" placed into $(BUILD_DIR)/
 	
 #
 # Instructions test
 #
 instruction: build/.placeholder
-	g++ $(CFLAGS) -o $(BUILD_DIR)/instructions instructions.cpp NBHashTable.cpp VersionState.cpp ProbeBound.cpp
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/instructions $(TEST_DIR)/instructions.cpp $(SRC_DIR)/NBHashTable.cpp $(SRC_DIR)/VersionState.cpp $(SRC_DIR)/ProbeBound.cpp
 	@echo Instruction correctness tester "instructions" placed into $(BUILD_DIR)/
 
 #
 # Correctness test
 #
 correctness: build/.placeholder results/.placeholder
-	g++ $(CFLAGS) -o $(BUILD_DIR)/correctness1 correctness1.cpp NBHashTable.cpp VersionState.cpp ProbeBound.cpp
-	g++ $(CFLAGS) -o $(BUILD_DIR)/correctness2 correctness2.cpp NBHashTable.cpp VersionState.cpp ProbeBound.cpp
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/correctness1 $(TEST_DIR)/correctness1.cpp $(SRC_DIR)/NBHashTable.cpp $(SRC_DIR)/VersionState.cpp $(SRC_DIR)/ProbeBound.cpp
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/correctness2 $(TEST_DIR)/correctness2.cpp $(SRC_DIR)/NBHashTable.cpp $(SRC_DIR)/VersionState.cpp $(SRC_DIR)/ProbeBound.cpp
 	@echo Correctness executable files built and placed into $(BUILD_DIR)/
 
 #
 # Execution time tests
 #
 executionTime: build/.placeholder results/.placeholder
-	g++ $(CFLAGS) -o $(BUILD_DIR)/executionTime executiontime.cpp NBHashTable.cpp VersionState.cpp ProbeBound.cpp
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/executionTime $(TEST_DIR)/executiontime.cpp $(SRC_DIR)/NBHashTable.cpp $(SRC_DIR)/VersionState.cpp $(SRC_DIR)/ProbeBound.cpp
 	@echo Execution time executable file built and placed into $(BUILD_DIR)/
 
 executionTimeTest: executionTime time1 time2 time3 time4 time5 time6
