@@ -30,37 +30,67 @@ bool NBHashTable::insert(NBType k) {
 	VersionState::State state;
 
 	while (true) {
-		if (++i >= kSize) {
+		
+        //Checks to make sure that the table isn't full
+        if (++i >= kSize) {
 			return false;
 		}
+        
+        //Gets the current bucket's version state and splits it into its two parts
 		int vs = getBucketValue(hashIndex, i)->vs->load();
 		version = VersionState::getVersion(vs);
 		state = VersionState::getState(vs);
 
+        //Creates the two objects for the comparison
 		VersionState cmpVsObj(version,VersionState::State::EMPTY);
 		int cmpVs = cmpVsObj.load();
 		VersionState newVsObj(version,VersionState::State::BUSY);
 		int newVs = newVsObj.load();
+        
+        //Performs the compare and swap for the state change (EMPTY -> BUSY)
 		if (getBucketValue(hashIndex, i)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
 			break;
 		}
 	}
+    
+    //Updates the bucket's key value
 	getBucketValue(hashIndex, i)->key = k;
-	while (true) {
-		getBucketValue(hashIndex, i)->vs->set(version, VersionState::State::VISIBLE);
-		conditionallyRaiseBound(hashIndex, i);
-		getBucketValue(hashIndex, i)->vs->set(version,VersionState::State::INSERTING);
-		bool r = assist(k,hashIndex,i,version);
-		VersionState collidedVs(version,VersionState::State::COLLIDED);
+	
+    while (true) {
+		//Sets the bucket's state to VISIBLE
+        getBucketValue(hashIndex, i)->vs->set(version, VersionState::State::VISIBLE);
+		
+        //Updates the bucket's probe bound
+        conditionallyRaiseBound(hashIndex, i);
+		
+        //Updates the bucket's state to INSERTING
+        getBucketValue(hashIndex, i)->vs->set(version,VersionState::State::INSERTING);
+		
+        //Performs the assist operation
+        bool r = assist(k,hashIndex,i,version);
+		
+        //Creates the version state for the comparison operation
+        VersionState collidedVs(version,VersionState::State::COLLIDED);
+        
+        //If the current bucket is not in a collision state return true
 		if (getBucketValue(hashIndex, i)->vs->load() != collidedVs.load()) {
 			return true;
 		}
+        
+        //If the assist operation returned false, update the bound, increment the version, and empty the bucket
 		if (!r) {
+            //Update the bound
 			conditionallyLowerBound(hashIndex, i);
-			VersionState emptyVs(version + 1,VersionState::State::EMPTY);
+			
+            //Create a new version state with an updated version and empty state
+            VersionState emptyVs(version + 1,VersionState::State::EMPTY);
+            
+            //Update the bucket's version state
 			getBucketValue(hashIndex, i)->vs->store(emptyVs);
 			return false;
 		}
+        
+        //Increment the version
 		version++;
 
 	}
@@ -91,9 +121,7 @@ bool NBHashTable::contains(NBType k) {
 }
 
 int NBHashTable::size() {
-	mainMutex.lock();
 	return kSize;
-	mainMutex.unlock();
 }
 
 bool NBHashTable::remove(NBType n) {
