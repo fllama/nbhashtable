@@ -42,10 +42,8 @@ bool NBHashTable::insert(NBType k) {
 		state = VersionState::getState(vs);
 
         //Creates the two objects for the comparison
-		VersionState cmpVsObj(version,VersionState::State::EMPTY);
-		int cmpVs = cmpVsObj.load();
-		VersionState newVsObj(version,VersionState::State::BUSY);
-		int newVs = newVsObj.load();
+		int cmpVs = VersionState::getRawVS(version,VersionState::State::EMPTY);
+		int newVs = VersionState::getRawVS(version,VersionState::State::BUSY);
         
         //Performs the compare and swap for the state change (EMPTY -> BUSY)
 		if (getBucketValue(hashIndex, i)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
@@ -133,10 +131,8 @@ bool NBHashTable::remove(NBType n) {
 		VersionState::State state = VersionState::getState(vs);
 
 		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
-			VersionState cmpVsObj(version,VersionState::State::MEMBER);
-			int cmpVs = cmpVsObj.load();
-			VersionState newVsObj(version,VersionState::State::BUSY);
-			int newVs = newVsObj.load();
+			int cmpVs = VersionState::getRawVS(version,VersionState::State::MEMBER);
+			int newVs = VersionState::getRawVS(version,VersionState::State::BUSY);
 
 			if (getBucketValue(hashIndex, jumps)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
 				conditionallyLowerBound(hashIndex, jumps);
@@ -249,21 +245,16 @@ void NBHashTable::conditionallyLowerBound(int startIndex, int probeJumps) {
 		bounds[startIndex].compare_exchange_strong(pb, newPb, std::memory_order_release, std::memory_order_relaxed);
 	}
 	if (probeJumps > 0) {
-
-		ProbeBound cmpPbObj(false,probeJumps);
-		ProbeBound newPbObj(true,probeJumps);
-		int cmpPb = cmpPbObj.load();
-		int newPb = newPbObj.load();
+		int cmpPb = ProbeBound::makeRaw(false,probeJumps);
+		int newPb = ProbeBound::makeRaw(true,probeJumps);
 		while (bounds[startIndex].compare_exchange_strong(cmpPb, newPb, std::memory_order_release, std::memory_order_relaxed)) {
 			int i = probeJumps - 1;
 			while (i > 0 && !doesBucketContainCollision(startIndex,probeJumps)) {
 				i--;
 			}
 
-			ProbeBound cmpPbObj2(true,probeJumps);
-			ProbeBound newPbObj2(false,i);
-			int cmpPb2 = cmpPbObj2.load();
-			int newPb2 = newPbObj2.load();
+			int cmpPb2 = ProbeBound::makeRaw(true,probeJumps);
+			int newPb2 = ProbeBound::makeRaw(false,i);
 			bounds[startIndex].compare_exchange_strong(cmpPb2, newPb2, std::memory_order_release, std::memory_order_relaxed);
 		}
 	}
