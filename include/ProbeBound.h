@@ -9,7 +9,6 @@ class ProbeBound : public std::atomic_int {
 	
 	static bool getBit(int val, int bit);
 	
-	
 	public:
 
 		// Constructors / setters

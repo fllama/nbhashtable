@@ -42,8 +42,8 @@ bool NBHashTable::insert(NBType k) {
 		state = VersionState::getState(vs);
 
         //Creates the two objects for the comparison
-		int cmpVs = VersionState::getRawVS(version,VersionState::State::EMPTY);
-		int newVs = VersionState::getRawVS(version,VersionState::State::BUSY);
+		int cmpVs = VersionState::makeRaw(version,VersionState::State::EMPTY);
+		int newVs = VersionState::makeRaw(version,VersionState::State::BUSY);
         
         //Performs the compare and swap for the state change (EMPTY -> BUSY)
 		if (getBucketValue(hashIndex, i)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
@@ -131,8 +131,8 @@ bool NBHashTable::remove(NBType n) {
 		VersionState::State state = VersionState::getState(vs);
 
 		if (state == VersionState::State::MEMBER && getBucketValue(hashIndex, jumps)->key == n) {
-			int cmpVs = VersionState::getRawVS(version,VersionState::State::MEMBER);
-			int newVs = VersionState::getRawVS(version,VersionState::State::BUSY);
+			int cmpVs = VersionState::makeRaw(version,VersionState::State::MEMBER);
+			int newVs = VersionState::makeRaw(version,VersionState::State::BUSY);
 
 			if (getBucketValue(hashIndex, jumps)->vs->compare_exchange_strong(cmpVs, newVs, std::memory_order_release, std::memory_order_relaxed)) {
 				conditionallyLowerBound(hashIndex, jumps);
@@ -287,8 +287,8 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 				
 				VersionState vsj_ins(ver_j, VSTATE::INSERTING);
 				if (getBucketValue(h, j)->vs->load() == vsj_ins.load()) {
-					int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
-					getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
+					int vsi_ins = VersionState::makeRaw(ver_i, VSTATE::INSERTING);
+					getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::makeRaw(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
 					return assist(key,h,j,ver_j);
 				}
 				
@@ -296,8 +296,8 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 				
 				VersionState vsi_ins(ver_i, VSTATE::INSERTING);
 				if(getBucketValue(h, i)->vs->load() == vsi_ins.load()) {
-					int vsj_ins = VersionState::getRawVS(ver_j, VSTATE::INSERTING);
-					getBucketValue(h,j)->vs->compare_exchange_strong(vsj_ins, VersionState::getRawVS(ver_j, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
+					int vsj_ins = VersionState::makeRaw(ver_j, VSTATE::INSERTING);
+					getBucketValue(h,j)->vs->compare_exchange_strong(vsj_ins, VersionState::makeRaw(ver_j, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
 				}
 			}
 		}
@@ -311,8 +311,8 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 		if(state_j == VSTATE::MEMBER && getBucketValue(h, j)->key == key) {
 			VersionState vsj_mem(ver_j, VSTATE::MEMBER);
 			if(getBucketValue(h, j)->vs->load() == vsj_mem.load()) {
-				int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
-				getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
+				int vsi_ins = VersionState::makeRaw(ver_i, VSTATE::INSERTING);
+				getBucketValue(h, i)->vs->compare_exchange_strong(vsi_ins, VersionState::makeRaw(ver_i, VSTATE::COLLIDED), std::memory_order_release, std::memory_order_relaxed);
 				return false;
 			}
 		}
@@ -320,7 +320,7 @@ bool NBHashTable::assist(NBType key, int h, int i, int ver_i) {
 	
 	// If we're here, that means we finally arrived at the index to insert at
 	// Now, we can finally mark it as a member!
-	int vsi_ins = VersionState::getRawVS(ver_i, VSTATE::INSERTING);
-	getBucketValue(h,i)->vs->compare_exchange_strong(vsi_ins, VersionState::getRawVS(ver_i, VSTATE::MEMBER), std::memory_order_release, std::memory_order_relaxed);
+	int vsi_ins = VersionState::makeRaw(ver_i, VSTATE::INSERTING);
+	getBucketValue(h,i)->vs->compare_exchange_strong(vsi_ins, VersionState::makeRaw(ver_i, VSTATE::MEMBER), std::memory_order_release, std::memory_order_relaxed);
 	return true;
 }

@@ -6,7 +6,7 @@ VersionState::VersionState(int version, VersionState::State state) {
 }
 
 void VersionState::set(int version, VersionState::State state) {
-	this->store(getRawVS(version, state));
+	this->store(makeRaw(version, state));
 }
 
 VersionState::State VersionState::getState(int raw) {
@@ -24,7 +24,7 @@ int VersionState::getVersion(int raw) {
 }
 	
 // Private helper functions below
-int VersionState::getRawVS(int version, VersionState::State state) {
+int VersionState::makeRaw(int version, VersionState::State state) {
 	version = version << NUM_STATE_BITS;
 	
 	// Make the least-sig bits of version reflect the state
